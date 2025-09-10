@@ -306,6 +306,11 @@ class ELIT_API_Manager {
             }
         }
         
+        // Apply markup using the price calculator function (like NewBytes plugin)
+        if ($price > 0 && function_exists('nb_calculate_price_with_markup')) {
+            $price = nb_calculate_price_with_markup($price);
+        }
+        
         return $price > 0 ? $price : 0;
     }
     
