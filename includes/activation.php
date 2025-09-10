@@ -56,7 +56,7 @@ function nb_activation() {
         nb_generate_encryption_key();
         
         // Set plugin version
-        update_option('nb_plugin_version', NB_VERSION);
+        update_option('elit_plugin_version', VERSION_ELIT);
         
         // Log successful activation
         error_log('NewBytes Plugin: Activación completada exitosamente');

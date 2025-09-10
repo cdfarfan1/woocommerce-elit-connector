@@ -18,17 +18,28 @@ define('VERSION_ELIT', '1.0.0');
 define('ELIT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ELIT_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Include only essential files for ELIT (optimized for minimal weight)
-require_once ELIT_PLUGIN_PATH . 'includes/activation.php';        // Plugin activation/deactivation
-require_once ELIT_PLUGIN_PATH . 'includes/admin-hooks.php';       // Admin menu and settings registration
-require_once ELIT_PLUGIN_PATH . 'includes/cron-hooks.php';        // Scheduled sync functionality
-require_once ELIT_PLUGIN_PATH . 'includes/utils.php';             // Logging and utility functions
-require_once ELIT_PLUGIN_PATH . 'includes/price-calculator.php';  // Price and markup calculations
-require_once ELIT_PLUGIN_PATH . 'includes/modals.php';            // Admin interface modals
-require_once ELIT_PLUGIN_PATH . 'includes/product-sync.php';      // WooCommerce product sync engine
-require_once ELIT_PLUGIN_PATH . 'includes/settings.php';          // Admin configuration page
-require_once ELIT_PLUGIN_PATH . 'includes/elit-api.php';          // ELIT API integration
-require_once ELIT_PLUGIN_PATH . 'includes/elit-sync-callback.php'; // ELIT synchronization logic
+// Include only essential files for ELIT (with error checking)
+$required_files = array(
+    'includes/activation.php',
+    'includes/admin-hooks.php', 
+    'includes/cron-hooks.php',
+    'includes/utils.php',
+    'includes/price-calculator.php',
+    'includes/modals.php',
+    'includes/product-sync.php',
+    'includes/settings.php',
+    'includes/elit-api.php',
+    'includes/elit-sync-callback.php'
+);
+
+foreach ($required_files as $file) {
+    $file_path = ELIT_PLUGIN_PATH . $file;
+    if (file_exists($file_path)) {
+        require_once $file_path;
+    } else {
+        wp_die("Error: No se pudo cargar el archivo requerido: $file");
+    }
+}
 
 /**
  * Updated callback function to use ELIT instead of NewBytes
@@ -74,19 +85,7 @@ add_action('wp_ajax_test_elit_connection', 'ajax_test_elit_connection');
 register_activation_hook(__FILE__, 'elit_activation');
 register_deactivation_hook(__FILE__, 'elit_deactivation');
 
-/**
- * Enqueue FontAwesome for admin pages
- */
-function enqueue_fontawesome($hook) {
-    if (strpos($hook, 'nb') !== false || strpos($hook, 'elit') !== false) {
-        wp_enqueue_style(
-            'fontawesome',
-            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-            array(),
-            '6.0.0'
-        );
-    }
-}
+// FontAwesome is loaded by modals.php
 
 /**
  * Add admin notice for ELIT configuration
