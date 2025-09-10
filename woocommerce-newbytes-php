@@ -1,15 +1,28 @@
 <?php
-/*
-Plugin Name: Conector NewBytes
-Description: Sincroniza los productos del catálogo de NewBytes con WooCommerce.
-Author: NewBytes
-Author URI: https://nb.com.ar
-Version: 0.1.3
-*/
+/**
+ * Plugin Name: Conector NewBytes
+ * Description: Sincroniza los productos del catálogo de NewBytes con WooCommerce.
+ * Author: NewBytes
+ * Author URI: https://nb.com.ar
+ * Version: 0.1.3
+ * Text Domain: newbytes-connector
+ * Domain Path: /languages
+ * Requires at least: 5.0
+ * Tested up to: 6.4
+ * Requires PHP: 7.4
+ * WC requires at least: 4.0
+ * WC tested up to: 8.5
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * 
+ * @package NewBytes_WooCommerce_Connector
+ * @version 0.1.3
+ * @since 1.0.0
+ */
 
 // Prevenir acceso directo al archivo
 if (!defined('ABSPATH')) {
-    exit;
+    exit('Direct access denied.');
 }
 
 // Definir constantes del plugin
@@ -18,36 +31,47 @@ define('NB_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('NB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('API_URL_NB', 'https://api.nb.com.ar/v1');
 define('VERSION_NB', '0.1.3');
+define('NB_TEXT_DOMAIN', 'newbytes-connector');
 
-// Función de inicialización principal del plugin
+/**
+ * Función de inicialización principal del plugin
+ * 
+ * Verifica que WooCommerce esté instalado y activo, luego incluye
+ * todos los archivos necesarios del plugin en el orden correcto.
+ * 
+ * @since 1.0.0
+ * @return void
+ */
 function nb_init() {
     // Verificar que WooCommerce esté instalado y activo
     if (!class_exists('WooCommerce')) {
         add_action('admin_notices', function() {
-            echo '<div class="error"><p>El plugin Conector NewBytes requiere que WooCommerce esté instalado y activado.</p></div>';
+            echo '<div class="error"><p>' . esc_html__('El plugin Conector NewBytes requiere que WooCommerce esté instalado y activado.', 'newbytes-connector') . '</p></div>';
         });
         return;
     }
 
-    // Incluir archivos necesarios
+    // Incluir archivos necesarios en orden de dependencias
     $includes = array(
-        'utils.php',
-        'activation.php',
-        'admin-hooks.php',
-        'cron-hooks.php',
-        'rest-api.php',
-        'product-sync.php',
-        'product-delete.php',
-        'price-calculator.php',
-        'modals.php',
-        'settings.php',
-        'sync-callback.php'
+        'utils.php',           // Utilidades y funciones auxiliares
+        'activation.php',      // Funciones de activación/desactivación
+        'admin-hooks.php',     // Hooks del área de administración
+        'cron-hooks.php',      // Tareas programadas
+        'rest-api.php',        // API REST endpoints
+        'product-sync.php',    // Sincronización de productos
+        'product-delete.php',  // Eliminación de productos
+        'price-calculator.php',// Calculadora de precios
+        'modals.php',          // Ventanas modales
+        'settings.php',        // Configuraciones del plugin
+        'sync-callback.php'    // Callbacks de sincronización
     );
 
     foreach ($includes as $file) {
         $path = NB_PLUGIN_DIR . 'includes/' . $file;
         if (file_exists($path)) {
             require_once $path;
+        } else {
+            error_log('NewBytes Connector: Archivo faltante - ' . $file);
         }
     }
 }
@@ -55,7 +79,15 @@ function nb_init() {
 // Inicializar el plugin en el momento correcto
 add_action('plugins_loaded', 'nb_init', 20); // Prioridad 20 para asegurar que WooCommerce esté cargado
 
-// Registrar hooks después de la inicialización
+/**
+ * Registrar hooks después de la inicialización
+ * 
+ * Registra todos los hooks de WordPress necesarios para el funcionamiento
+ * del plugin, incluyendo AJAX, filtros y acciones administrativas.
+ * 
+ * @since 1.0.0
+ * @return void
+ */
 function nb_register_hooks() {
     add_action('wp_ajax_nb_update_description_products', 'nb_update_description_products');
     add_action('admin_enqueue_scripts', 'enqueue_fontawesome');
@@ -74,15 +106,30 @@ add_action('init', 'nb_register_hooks');
 register_activation_hook(NB_PLUGIN_FILE, 'nb_activation');
 register_deactivation_hook(NB_PLUGIN_FILE, 'nb_deactivation');
 
-// Manejador de errores
+/**
+ * Manejador personalizado de errores
+ * 
+ * Captura y registra errores específicos del plugin NewBytes Connector
+ * en el log de errores de WordPress con formato detallado.
+ * 
+ * @since 1.0.0
+ * @param int $errno Nivel del error
+ * @param string $errstr Mensaje del error
+ * @param string $errfile Archivo donde ocurrió el error
+ * @param int $errline Línea donde ocurrió el error
+ * @return bool False para permitir el manejo normal de errores
+ */
 function nb_handle_error($errno, $errstr, $errfile, $errline) {
-    error_log(sprintf(
-        'Error en Conector NewBytes [%d]: %s en %s:%d',
-        $errno,
-        $errstr,
-        $errfile,
-        $errline
-    ));
-    return false;
+    // Solo registrar errores relacionados con NewBytes
+    if (strpos($errfile, 'newbytes') !== false) {
+        error_log(sprintf(
+            'Error en Conector NewBytes [%d]: %s en %s:%d',
+            $errno,
+            $errstr,
+            basename($errfile),
+            $errline
+        ));
+    }
+    return false; // Permitir el manejo normal de errores de PHP
 }
 set_error_handler('nb_handle_error');

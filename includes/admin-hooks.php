@@ -4,27 +4,33 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-function nb_plugin_action_links($links)
+function elit_plugin_action_links($links)
 {
-    $settings = '<a href="' . get_admin_url(null, 'options-general.php?page=nb') . '">Ajustes</a>';
+    $settings = '<a href="' . get_admin_url(null, 'options-general.php?page=elit') . '">Ajustes</a>';
     array_unshift($links, $settings);
     return $links;
 }
 
-function nb_menu()
+function elit_menu()
 {
-    add_options_page('Conector NB', 'Conector NB', 'manage_options', 'nb', 'nb_options_page');
+    add_options_page('Conector ELIT', 'Conector ELIT', 'manage_options', 'elit', 'elit_options_page');
 }
 
-function nb_register_settings()
+function elit_register_settings()
 {
-    register_setting('nb_options', 'nb_user');
-    register_setting('nb_options', 'nb_password');
-    register_setting('nb_options', 'nb_token');
-    register_setting('nb_options', 'nb_prefix');
-    register_setting('nb_options', 'nb_sync_no_iva');
-    register_setting('nb_options', 'nb_sync_usd');
-    register_setting('nb_options', 'nb_description');
-    register_setting('nb_options', 'nb_sync_interval');
-    register_setting('nb_options', 'nb_markup_percentage');
+    // ELIT API settings
+    register_setting('elit_options', 'elit_user_id');
+    register_setting('elit_options', 'elit_token');
+    register_setting('elit_options', 'elit_sku_prefix');
+    register_setting('elit_options', 'elit_sync_usd');
+    
+    // General settings
+    register_setting('elit_options', 'elit_description');
+    register_setting('elit_options', 'elit_sync_interval');
+    register_setting('elit_options', 'elit_markup_percentage');
+    
+    // Keep legacy settings for compatibility during transition
+    register_setting('elit_options', 'nb_description');
+    register_setting('elit_options', 'nb_sync_interval');
+    register_setting('elit_options', 'nb_markup_percentage');
 }

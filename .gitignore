@@ -5,14 +5,9 @@ wp-content/cache/
 wp-content/backup-db/
 wp-content/advanced-cache.php
 wp-content/wp-cache-config.php
-wp-content/cache/
-wp-content/backups/
-
-# WooCommerce
-woocommerce/logs/
-
-# Debug files
-debug.log
+wp-content/plugins/hello.php
+wp-content/plugins/akismet/
+sitemap.xml
 *.log
 
 # OS generated files
@@ -31,24 +26,35 @@ Thumbs.db
 *.swo
 *~
 
-# Node modules (if any)
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Node modules (if using any build tools)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Composer
+# Composer (if using)
 vendor/
-composer.lock
 
 # Environment files
 .env
 .env.local
-.env.production
-
-# Temporary files
-*.tmp
-*.temp
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Plugin specific
 debug-newbytes.txt
+wc-product-export-*.csv
+
+# PDF documentation (keep in repo but ignore if too large)
+# *.pdf
+
+# Test files
+tests/coverage/
+phpunit.xml.local

@@ -4,8 +4,8 @@ if (!defined('ABSPATH')) {
 }
 
 function nb_calculate_price_with_markup($original_price) {
-    // Obtener el markup desde la configuración
-    $markup_percentage = get_option('nb_markup_percentage', 35);
+    // Obtener el markup desde la configuración (priorizar ELIT, fallback a NB)
+    $markup_percentage = get_option('elit_markup_percentage', get_option('nb_markup_percentage', 35));
     
     // Validar que el precio original sea numérico
     if (!is_numeric($original_price)) {
@@ -30,7 +30,7 @@ function nb_calculate_price_with_markup($original_price) {
 }
 
 function nb_get_markup_percentage() {
-    return floatval(get_option('nb_markup_percentage', 35));
+    return floatval(get_option('elit_markup_percentage', get_option('nb_markup_percentage', 35)));
 }
 
 // Función auxiliar para validar y formatear precios
