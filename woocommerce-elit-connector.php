@@ -18,22 +18,17 @@ define('VERSION_ELIT', '1.0.0');
 define('ELIT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ELIT_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Include necessary files
-require_once ELIT_PLUGIN_PATH . 'includes/activation.php';
-require_once ELIT_PLUGIN_PATH . 'includes/admin-hooks.php';
-require_once ELIT_PLUGIN_PATH . 'includes/cron-hooks.php';
-require_once ELIT_PLUGIN_PATH . 'includes/rest-api.php';
-require_once ELIT_PLUGIN_PATH . 'includes/utils.php';
-require_once ELIT_PLUGIN_PATH . 'includes/price-calculator.php';
-require_once ELIT_PLUGIN_PATH . 'includes/modals.php';
-require_once ELIT_PLUGIN_PATH . 'includes/product-sync.php';
-require_once ELIT_PLUGIN_PATH . 'includes/product-delete.php';
-require_once ELIT_PLUGIN_PATH . 'includes/settings.php';
-require_once ELIT_PLUGIN_PATH . 'includes/sync-callback.php';
-
-// Include ELIT specific files
-require_once ELIT_PLUGIN_PATH . 'includes/elit-api.php';
-require_once ELIT_PLUGIN_PATH . 'includes/elit-sync-callback.php';
+// Include only essential files for ELIT (optimized for minimal weight)
+require_once ELIT_PLUGIN_PATH . 'includes/activation.php';        // Plugin activation/deactivation
+require_once ELIT_PLUGIN_PATH . 'includes/admin-hooks.php';       // Admin menu and settings registration
+require_once ELIT_PLUGIN_PATH . 'includes/cron-hooks.php';        // Scheduled sync functionality
+require_once ELIT_PLUGIN_PATH . 'includes/utils.php';             // Logging and utility functions
+require_once ELIT_PLUGIN_PATH . 'includes/price-calculator.php';  // Price and markup calculations
+require_once ELIT_PLUGIN_PATH . 'includes/modals.php';            // Admin interface modals
+require_once ELIT_PLUGIN_PATH . 'includes/product-sync.php';      // WooCommerce product sync engine
+require_once ELIT_PLUGIN_PATH . 'includes/settings.php';          // Admin configuration page
+require_once ELIT_PLUGIN_PATH . 'includes/elit-api.php';          // ELIT API integration
+require_once ELIT_PLUGIN_PATH . 'includes/elit-sync-callback.php'; // ELIT synchronization logic
 
 /**
  * Updated callback function to use ELIT instead of NewBytes
