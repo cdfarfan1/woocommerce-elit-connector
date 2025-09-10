@@ -28,6 +28,7 @@ function elit_register_settings()
     register_setting('elit_options', 'elit_description');
     register_setting('elit_options', 'elit_sync_interval');
     register_setting('elit_options', 'elit_markup_percentage');
+    register_setting('elit_options', 'elit_apply_markup_on_pvp');
     
     // Keep legacy settings for compatibility during transition
     register_setting('elit_options', 'nb_description');

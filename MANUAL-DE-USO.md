@@ -149,15 +149,27 @@ git clone https://github.com/cdfarfan1/woocommerce-elit-connector.git
 
 ### Precios y Markup
 
-#### Cálculo de Precios:
-1. **Precio base**: Se obtiene de `pvp_ars` o `pvp_usd` según configuración
-2. **Markup aplicado**: Se multiplica por (1 + markup_percentage/100)
-3. **Precio final**: Se redondea a 2 decimales
+#### ⚠️ IMPORTANTE - Precios PVP de ELIT:
+Los campos `pvp_ars` y `pvp_usd` de ELIT **ya son precios de venta público** que incluyen el margen de ELIT. 
 
-#### Ejemplo:
-- **Precio ELIT**: $1,000 ARS
-- **Markup**: 35%
-- **Precio final**: $1,000 × 1.35 = $1,350 ARS
+#### Opciones de Configuración:
+
+##### Opción 1: Precios PVP Directos (Recomendado)
+- **Configuración**: "Aplicar Markup sobre PVP" = NO
+- **Markup adicional**: 0%
+- **Resultado**: Usar precios de ELIT directamente
+- **Ejemplo**: PVP ELIT $1,000 → Precio final $1,000
+
+##### Opción 2: PVP + Markup Adicional
+- **Configuración**: "Aplicar Markup sobre PVP" = SÍ
+- **Markup adicional**: Tu margen extra (ej: 10%)
+- **Resultado**: PVP + tu margen adicional
+- **Ejemplo**: PVP ELIT $1,000 + 10% → Precio final $1,100
+
+#### Cálculo de Precios:
+1. **Precio base**: `pvp_ars` o `pvp_usd` (ya incluyen margen ELIT)
+2. **Markup adicional**: Solo si está configurado
+3. **Precio final**: Se redondea a 2 decimales
 
 ---
 

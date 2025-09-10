@@ -143,9 +143,16 @@ function elit_options_page()
     echo '</tr>';
     // Add Markup Percentage
     echo '<tr>';
-    echo '<th scope="row">Porcentaje de Markup</th>';
-    echo '<td><input type="number" name="elit_markup_percentage" id="elit_markup_percentage" value="' . esc_attr(get_option('elit_markup_percentage', get_option('nb_markup_percentage', 35))) . '" min="0" max="100" /> %';
-    echo '<p class="description">Porcentaje de markup a aplicar a los precios de los productos.</p></td>';
+    echo '<th scope="row">Porcentaje de Markup Adicional</th>';
+    echo '<td><input type="number" name="elit_markup_percentage" id="elit_markup_percentage" value="' . esc_attr(get_option('elit_markup_percentage', 0)) . '" min="0" max="100" /> %';
+    echo '<p class="description">Markup adicional sobre los precios PVP de ELIT. Los precios de ELIT ya incluyen su margen. Usa 0% para precios directos de ELIT.</p></td>';
+    echo '</tr>';
+    
+    // Add option to apply markup on PVP
+    echo '<tr>';
+    echo '<th scope="row">Aplicar Markup sobre PVP</th>';
+    echo '<td><input type="checkbox" name="elit_apply_markup_on_pvp" id="elit_apply_markup_on_pvp" value="1" ' . checked(1, get_option('elit_apply_markup_on_pvp'), false) . ' />';
+    echo '<p class="description">Marca esta opción si deseas aplicar markup adicional sobre los precios PVP de ELIT. Por defecto, se usan los precios PVP directamente.</p></td>';
     echo '</tr>';
     echo '</tbody>';
     echo '</table>';

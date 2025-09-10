@@ -306,9 +306,19 @@ class ELIT_API_Manager {
             }
         }
         
-        // Apply markup using the price calculator function (like NewBytes plugin)
+        // IMPORTANTE: Los precios pvp_usd y pvp_ars de ELIT ya son precios de venta público
+        // Aplicar markup solo si está configurado para hacerlo sobre PVP
+        $is_pvp_price = isset($elit_product['pvp_ars']) || isset($elit_product['pvp_usd']);
+        $apply_markup_on_pvp = get_option('elit_apply_markup_on_pvp', false);
+        
         if ($price > 0 && function_exists('nb_calculate_price_with_markup')) {
-            $price = nb_calculate_price_with_markup($price);
+            if (!$is_pvp_price || $apply_markup_on_pvp) {
+                // Aplicar markup si:
+                // 1. No es precio PVP (precio base + impuestos)
+                // 2. Es precio PVP pero el usuario quiere markup adicional
+                $price = nb_calculate_price_with_markup($price);
+            }
+            // Si es precio PVP y no se quiere markup adicional, usar precio directo
         }
         
         return $price > 0 ? $price : 0;
