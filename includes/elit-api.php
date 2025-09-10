@@ -162,9 +162,12 @@ class ELIT_API_Manager {
                 break;
             }
             
-            // ELIT returns array of products directly according to documentation
+            // ELIT returns structured response with 'resultado' containing the products array
             $products = array();
-            if (is_array($response)) {
+            if (is_array($response) && isset($response['resultado']) && is_array($response['resultado'])) {
+                $products = $response['resultado'];
+            } elseif (is_array($response)) {
+                // Fallback for direct array response
                 $products = $response;
             }
             
@@ -204,17 +207,19 @@ class ELIT_API_Manager {
             return null;
         }
         
-        // Map ELIT fields to WooCommerce format according to ELIT documentation
+        // Map ELIT fields to WooCommerce format based on real API response
         $transformed = array(
             'sku' => self::get_field_value($elit_product, array('codigo_producto', 'codigo_alfa', 'id')),
             'name' => self::get_field_value($elit_product, array('nombre')),
-            'description' => '', // ELIT doesn't provide description in basic product data
-            'short_description' => '', // Will be populated from attributes if available
+            'description' => self::get_field_value($elit_product, array('descripcion')),
+            'short_description' => self::build_short_description($elit_product),
             'price' => self::get_elit_price($elit_product),
-            'stock_quantity' => self::get_field_value($elit_product, array('stock_total', 'stock_deposito_cliente'), 0),
+            'stock_quantity' => self::get_elit_stock($elit_product),
+            'stock_status' => self::get_elit_stock_status($elit_product),
             'categories' => self::get_elit_categories($elit_product),
             'images' => self::get_elit_images($elit_product),
             'weight' => self::get_field_value($elit_product, array('peso'), 0),
+            'dimensions' => self::get_elit_dimensions($elit_product),
             'brand' => self::get_field_value($elit_product, array('marca')),
             'warranty' => self::get_field_value($elit_product, array('garantia')),
             'ean' => self::get_field_value($elit_product, array('ean')),
@@ -222,21 +227,14 @@ class ELIT_API_Manager {
             'is_gamer' => self::get_field_value($elit_product, array('gamer'), false),
             'elit_id' => self::get_field_value($elit_product, array('id')),
             'elit_link' => self::get_field_value($elit_product, array('link')),
-            'attributes' => self::get_field_value($elit_product, array('atributos'), array())
+            'attributes' => self::get_field_value($elit_product, array('atributos'), array()),
+            'currency' => self::get_elit_currency($elit_product),
+            'created_date' => self::get_field_value($elit_product, array('creado')),
+            'updated_date' => self::get_field_value($elit_product, array('actualizado'))
         );
         
-        // Create short description from attributes
-        if (!empty($transformed['attributes']) && is_array($transformed['attributes'])) {
-            $attr_descriptions = array();
-            foreach ($transformed['attributes'] as $attr) {
-                if (is_array($attr) && isset($attr['nombre']) && isset($attr['valor'])) {
-                    $attr_descriptions[] = $attr['nombre'] . ': ' . $attr['valor'];
-                }
-            }
-            if (!empty($attr_descriptions)) {
-                $transformed['short_description'] = implode(' | ', array_slice($attr_descriptions, 0, 3));
-            }
-        }
+        // Remove empty short description override since we have a dedicated function
+        // Short description is built in build_short_description() function
         
         // Add prefix to SKU if configured
         $prefix = get_option('elit_sku_prefix', 'ELIT_');
@@ -379,6 +377,129 @@ class ELIT_API_Manager {
         return array_unique($images);
     }
     
+    /**
+     * Get stock quantity from ELIT product data
+     * 
+     * @since 1.0.0
+     * @param array $elit_product ELIT product data
+     * @return int Stock quantity
+     */
+    private static function get_elit_stock($elit_product) {
+        // Priority order: stock_deposito_cliente > stock_total > stock_deposito_cd
+        $stock_fields = array('stock_deposito_cliente', 'stock_total', 'stock_deposito_cd');
+        
+        foreach ($stock_fields as $field) {
+            if (isset($elit_product[$field]) && is_numeric($elit_product[$field])) {
+                $stock = intval($elit_product[$field]);
+                if ($stock > 0) {
+                    return $stock;
+                }
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Get stock status from ELIT product data
+     * 
+     * @since 1.0.0
+     * @param array $elit_product ELIT product data
+     * @return string WooCommerce stock status
+     */
+    private static function get_elit_stock_status($elit_product) {
+        $stock_quantity = self::get_elit_stock($elit_product);
+        $stock_level = self::get_field_value($elit_product, array('nivel_stock'), '');
+        
+        if ($stock_quantity > 0) {
+            return 'instock';
+        } elseif ($stock_level === 'bajo') {
+            return 'onbackorder'; // Permite pedidos pero indica stock bajo
+        } else {
+            return 'outofstock';
+        }
+    }
+    
+    /**
+     * Get dimensions from ELIT product data
+     * 
+     * @since 1.0.0
+     * @param array $elit_product ELIT product data
+     * @return array Dimensions array
+     */
+    private static function get_elit_dimensions($elit_product) {
+        $dimensions = array(
+            'length' => 0,
+            'width' => 0,
+            'height' => 0
+        );
+        
+        if (isset($elit_product['dimensiones']) && is_array($elit_product['dimensiones'])) {
+            $dims = $elit_product['dimensiones'];
+            $dimensions['length'] = floatval($dims['largo'] ?? 0);
+            $dimensions['width'] = floatval($dims['ancho'] ?? 0);
+            $dimensions['height'] = floatval($dims['alto'] ?? 0);
+        }
+        
+        return $dimensions;
+    }
+    
+    /**
+     * Get currency information from ELIT product data
+     * 
+     * @since 1.0.0
+     * @param array $elit_product ELIT product data
+     * @return string Currency code
+     */
+    private static function get_elit_currency($elit_product) {
+        $moneda = self::get_field_value($elit_product, array('moneda'), 1);
+        return ($moneda == 2) ? 'USD' : 'ARS';
+    }
+    
+    /**
+     * Build short description from product data
+     * 
+     * @since 1.0.0
+     * @param array $elit_product ELIT product data
+     * @return string Short description
+     */
+    private static function build_short_description($elit_product) {
+        $parts = array();
+        
+        // Add brand and category
+        $brand = self::get_field_value($elit_product, array('marca'));
+        $category = self::get_field_value($elit_product, array('categoria'));
+        $subcategory = self::get_field_value($elit_product, array('sub_categoria'));
+        
+        if ($brand) {
+            $parts[] = $brand;
+        }
+        
+        if ($category && $subcategory) {
+            $parts[] = $category . ' - ' . $subcategory;
+        } elseif ($category) {
+            $parts[] = $category;
+        }
+        
+        // Add warranty info
+        $warranty = self::get_field_value($elit_product, array('garantia'));
+        if ($warranty) {
+            $parts[] = 'Garantía: ' . $warranty . ($warranty === '12' ? ' meses' : '');
+        }
+        
+        // Add gaming tag
+        if (self::get_field_value($elit_product, array('gamer'), false)) {
+            $parts[] = '🎮 Gaming';
+        }
+        
+        // Add stock level info
+        $stock_level = self::get_field_value($elit_product, array('nivel_stock'));
+        if ($stock_level === 'bajo') {
+            $parts[] = '⚠️ Stock limitado';
+        }
+        
+        return implode(' | ', $parts);
+    }
     
     /**
      * Test ELIT API connection
@@ -402,11 +523,12 @@ class ELIT_API_Manager {
         // Test connection with minimal request
         $response = self::make_request('productos?limit=1');
         
-        if ($response !== null && is_array($response)) {
-            $product_count = count($response);
+        if ($response !== null && is_array($response) && isset($response['resultado'])) {
+            $total_products = $response['paginador']['total'] ?? 0;
+            $product_count = count($response['resultado']);
             return array(
                 'success' => true,
-                'message' => 'Conexión exitosa con ELIT API. Se encontraron productos disponibles.'
+                'message' => "Conexión exitosa con ELIT API. Total de productos disponibles: {$total_products}"
             );
         } else {
             return array(

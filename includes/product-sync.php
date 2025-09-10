@@ -282,12 +282,19 @@ class NB_Product_Sync {
             $product->set_short_description($data['short_description']);
         }
         
-        if ($data['stock_quantity'] > 0) {
-            $product->set_manage_stock(true);
-            $product->set_stock_quantity($data['stock_quantity']);
-            $product->set_stock_status('instock');
+        // Handle stock management with ELIT stock status
+        $stock_quantity = intval($data['stock_quantity'] ?? 0);
+        $stock_status = $data['stock_status'] ?? 'outofstock';
+        
+        $product->set_manage_stock(true);
+        $product->set_stock_quantity($stock_quantity);
+        $product->set_stock_status($stock_status);
+        
+        // Set backorders if stock is low but available
+        if ($stock_status === 'onbackorder') {
+            $product->set_backorders('yes');
         } else {
-            $product->set_stock_status('outofstock');
+            $product->set_backorders('no');
         }
         
         $product_id = $product->save();
@@ -331,12 +338,19 @@ class NB_Product_Sync {
             $product->set_short_description($data['short_description']);
         }
         
-        if ($data['stock_quantity'] > 0) {
-            $product->set_manage_stock(true);
-            $product->set_stock_quantity($data['stock_quantity']);
-            $product->set_stock_status('instock');
+        // Handle stock management with ELIT stock status
+        $stock_quantity = intval($data['stock_quantity'] ?? 0);
+        $stock_status = $data['stock_status'] ?? 'outofstock';
+        
+        $product->set_manage_stock(true);
+        $product->set_stock_quantity($stock_quantity);
+        $product->set_stock_status($stock_status);
+        
+        // Set backorders if stock is low but available
+        if ($stock_status === 'onbackorder') {
+            $product->set_backorders('yes');
         } else {
-            $product->set_stock_status('outofstock');
+            $product->set_backorders('no');
         }
         
         $result = $product->save();
