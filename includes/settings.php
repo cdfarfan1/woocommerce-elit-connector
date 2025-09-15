@@ -94,6 +94,17 @@ function elit_options_page()
     echo '<td><input type="text" name="elit_token" id="elit_token" value="' . esc_attr(get_option('elit_token')) . '" required />';
     echo '<p class="description">Tu token de acceso a la API de ELIT</p></td>';
     echo '</tr>';
+    
+    // Test credentials button
+    echo '<tr>';
+    echo '<th scope="row">Probar Credenciales</th>';
+    echo '<td>';
+    echo '<button type="button" id="test-elit-credentials" class="button button-secondary">Probar Conexión</button>';
+    echo '<button type="button" id="save-test-credentials" class="button button-primary" style="margin-left: 10px;">Guardar y Probar</button>';
+    echo '<div id="credentials-test-result" style="margin-top: 10px; padding: 10px; border-radius: 4px; display: none;"></div>';
+    echo '<p class="description">Prueba las credenciales antes de guardar para verificar que funcionan correctamente. "Guardar y Probar" guarda las credenciales temporalmente y las prueba.</p>';
+    echo '</td>';
+    echo '</tr>';
     // Add Prefix SKU
     echo '<tr>';
     echo '<th scope="row">Prefijo SKU *</th>';
@@ -216,11 +227,103 @@ function elit_options_page()
                 $("#update-all-text").hide();
                 $("#update-all-spinner").show();
             });
+
+            // Test ELIT credentials
+            $("#test-elit-credentials").on("click", function() {
+                var $btn = $(this);
+                var $result = $("#credentials-test-result");
+                
+                $btn.prop("disabled", true);
+                $btn.html("Probando...");
+                $result.hide();
+                
+                var user_id = $("#elit_user_id").val();
+                var token = $("#elit_token").val();
+                
+                if (!user_id || !token) {
+                    $result.html("<div style=\'color: #d63638; background: #fcf0f1; border: 1px solid #f0b7b8; padding: 10px; border-radius: 4px;\'>❌ Por favor completa el User ID y Token antes de probar.</div>").show();
+                    $btn.prop("disabled", false);
+                    $btn.html("Probar Conexión");
+                    return;
+                }
+                
+                $.ajax({
+                    url: ajaxurl,
+                    type: "POST",
+                    data: {
+                        action: "elit_test_credentials",
+                        user_id: user_id,
+                        token: token,
+                        nonce: nbAdmin.nonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $result.html("<div style=\'color: #00a32a; background: #f0f6fc; border: 1px solid #72aee6; padding: 10px; border-radius: 4px;\'>✅ " + response.message + "</div>").show();
+                        } else {
+                            $result.html("<div style=\'color: #d63638; background: #fcf0f1; border: 1px solid #f0b7b8; padding: 10px; border-radius: 4px;\'>❌ " + response.message + "</div>").show();
+                        }
+                    },
+                    error: function() {
+                        $result.html("<div style=\'color: #d63638; background: #fcf0f1; border: 1px solid #f0b7b8; padding: 10px; border-radius: 4px;\'>❌ Error al probar las credenciales. Intenta nuevamente.</div>").show();
+                    },
+                    complete: function() {
+                        $btn.prop("disabled", false);
+                        $btn.html("Probar Conexión");
+                    }
+                });
+            });
+
+            // Save and test ELIT credentials
+            $("#save-test-credentials").on("click", function() {
+                var $btn = $(this);
+                var $result = $("#credentials-test-result");
+                
+                $btn.prop("disabled", true);
+                $btn.html("Guardando...");
+                $result.hide();
+                
+                var user_id = $("#elit_user_id").val();
+                var token = $("#elit_token").val();
+                
+                if (!user_id || !token) {
+                    $result.html("<div style=\'color: #d63638; background: #fcf0f1; border: 1px solid #f0b7b8; padding: 10px; border-radius: 4px;\'>❌ Por favor completa el User ID y Token antes de guardar.</div>").show();
+                    $btn.prop("disabled", false);
+                    $btn.html("Guardar y Probar");
+                    return;
+                }
+                
+                $.ajax({
+                    url: ajaxurl,
+                    type: "POST",
+                    data: {
+                        action: "elit_save_test_credentials",
+                        user_id: user_id,
+                        token: token,
+                        nonce: nbAdmin.nonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $result.html("<div style=\'color: #00a32a; background: #f0f6fc; border: 1px solid #72aee6; padding: 10px; border-radius: 4px;\'>✅ " + response.message + "</div>").show();
+                        } else {
+                            $result.html("<div style=\'color: #d63638; background: #fcf0f1; border: 1px solid #f0b7b8; padding: 10px; border-radius: 4px;\'>❌ " + response.message + "</div>").show();
+                        }
+                    },
+                    error: function() {
+                        $result.html("<div style=\'color: #d63638; background: #fcf0f1; border: 1px solid #f0b7b8; padding: 10px; border-radius: 4px;\'>❌ Error al guardar las credenciales. Intenta nuevamente.</div>").show();
+                    },
+                    complete: function() {
+                        $btn.prop("disabled", false);
+                        $btn.html("Guardar y Probar");
+                    }
+                });
+            });
         });
     </script>';
 }
 
 add_action('wp_ajax_nb_update_connector', 'nb_update_connector');
+add_action('wp_ajax_elit_test_credentials', 'elit_test_credentials_ajax');
+add_action('wp_ajax_elit_save_test_credentials', 'elit_save_test_credentials_ajax');
 
 /**
  * Maneja la actualización del conector vía AJAX
@@ -379,3 +482,161 @@ function nb_markup_percentage_callback()
 }
 
 add_action('admin_init', 'nb_settings_init');
+
+/**
+ * Maneja la prueba de credenciales de ELIT vía AJAX
+ *
+ * Prueba las credenciales de ELIT sin guardarlas permanentemente.
+ * Utiliza el endpoint CSV que funciona correctamente.
+ *
+ * @since 1.0.0
+ * @return void
+ */
+function elit_test_credentials_ajax() {
+    // Verificar nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'nb_admin_nonce')) {
+        wp_die('Error de seguridad');
+    }
+    
+    // Verificar permisos
+    if (!current_user_can('manage_options')) {
+        wp_die('No tienes permisos para realizar esta acción');
+    }
+    
+    $user_id = sanitize_text_field($_POST['user_id']);
+    $token = sanitize_text_field($_POST['token']);
+    
+    if (empty($user_id) || empty($token)) {
+        wp_send_json_error('User ID y Token son requeridos');
+        return;
+    }
+    
+    // Probar conexión con las credenciales proporcionadas
+    $csv_url = 'https://clientes.elit.com.ar/v1/api/productos/csv';
+    $url = $csv_url . '?user_id=' . $user_id . '&token=' . $token;
+    
+    $response = wp_remote_get($url, array(
+        'timeout' => 30,
+        'headers' => array(
+            'User-Agent' => 'ELIT-WooCommerce-Connector/1.0.0'
+        )
+    ));
+    
+    if (is_wp_error($response)) {
+        wp_send_json_error('Error al conectar con ELIT: ' . $response->get_error_message());
+        return;
+    }
+    
+    $response_code = wp_remote_retrieve_response_code($response);
+    if ($response_code >= 400) {
+        wp_send_json_error('Error HTTP ' . $response_code . ' al conectar con ELIT');
+        return;
+    }
+    
+    $csv_data = wp_remote_retrieve_body($response);
+    if (empty($csv_data)) {
+        wp_send_json_error('Respuesta vacía de ELIT');
+        return;
+    }
+    
+    // Parsear CSV para contar productos
+    $lines = explode("\n", $csv_data);
+    $product_count = 0;
+    
+    for ($i = 1; $i < count($lines); $i++) {
+        $line = trim($lines[$i]);
+        if (empty($line)) continue;
+        
+        $values = str_getcsv($line);
+        if (count($values) >= 3 && !empty($values[2]) && !empty($values[3])) {
+            $product_count++;
+        }
+    }
+    
+    if ($product_count > 0) {
+        wp_send_json_success("Conexión exitosa con ELIT. Se encontraron {$product_count} productos disponibles.");
+    } else {
+        wp_send_json_error('No se encontraron productos en ELIT con estas credenciales');
+    }
+}
+
+/**
+ * Maneja el guardado y prueba de credenciales de ELIT vía AJAX
+ *
+ * Guarda las credenciales temporalmente y las prueba.
+ * Si funcionan, las guarda permanentemente.
+ *
+ * @since 1.0.0
+ * @return void
+ */
+function elit_save_test_credentials_ajax() {
+    // Verificar nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'nb_admin_nonce')) {
+        wp_die('Error de seguridad');
+    }
+    
+    // Verificar permisos
+    if (!current_user_can('manage_options')) {
+        wp_die('No tienes permisos para realizar esta acción');
+    }
+    
+    $user_id = sanitize_text_field($_POST['user_id']);
+    $token = sanitize_text_field($_POST['token']);
+    
+    if (empty($user_id) || empty($token)) {
+        wp_send_json_error('User ID y Token son requeridos');
+        return;
+    }
+    
+    // Guardar credenciales temporalmente
+    update_option('elit_user_id', $user_id);
+    update_option('elit_token', $token);
+    
+    // Probar conexión con las credenciales guardadas
+    $csv_url = 'https://clientes.elit.com.ar/v1/api/productos/csv';
+    $url = $csv_url . '?user_id=' . $user_id . '&token=' . $token;
+    
+    $response = wp_remote_get($url, array(
+        'timeout' => 30,
+        'headers' => array(
+            'User-Agent' => 'ELIT-WooCommerce-Connector/1.0.0'
+        )
+    ));
+    
+    if (is_wp_error($response)) {
+        wp_send_json_error('Error al conectar con ELIT: ' . $response->get_error_message());
+        return;
+    }
+    
+    $response_code = wp_remote_retrieve_response_code($response);
+    if ($response_code >= 400) {
+        wp_send_json_error('Error HTTP ' . $response_code . ' al conectar con ELIT');
+        return;
+    }
+    
+    $csv_data = wp_remote_retrieve_body($response);
+    if (empty($csv_data)) {
+        wp_send_json_error('Respuesta vacía de ELIT');
+        return;
+    }
+    
+    // Parsear CSV para contar productos
+    $lines = explode("\n", $csv_data);
+    $product_count = 0;
+    
+    for ($i = 1; $i < count($lines); $i++) {
+        $line = trim($lines[$i]);
+        if (empty($line)) continue;
+        
+        $values = str_getcsv($line);
+        if (count($values) >= 3 && !empty($values[2]) && !empty($values[3])) {
+            $product_count++;
+        }
+    }
+    
+    if ($product_count > 0) {
+        wp_send_json_success("Credenciales guardadas y probadas exitosamente. Se encontraron {$product_count} productos disponibles en ELIT. Ya puedes sincronizar productos.");
+    } else {
+        wp_send_json_error('Credenciales guardadas pero no se encontraron productos en ELIT');
+    }
+}
