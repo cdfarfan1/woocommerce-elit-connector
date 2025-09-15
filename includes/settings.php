@@ -167,6 +167,87 @@ function elit_options_page()
     echo '</tr>';
     echo '</tbody>';
     echo '</table>';
+    
+    // Mapeo de campos ELIT -> WooCommerce
+    echo '<div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #0073aa;">';
+    echo '<h3 style="margin-top: 0; color: #0073aa;">📋 Mapeo de Campos ELIT → WooCommerce</h3>';
+    echo '<p style="margin-bottom: 20px; color: #666;">Esta tabla muestra cómo se mapean los campos de ELIT a los productos de WooCommerce:</p>';
+    
+    echo '<div style="overflow-x: auto;">';
+    echo '<table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+    echo '<thead style="background: #0073aa; color: white;">';
+    echo '<tr>';
+    echo '<th style="padding: 12px; text-align: left; border-bottom: 2px solid #005a87;">Campo ELIT</th>';
+    echo '<th style="padding: 12px; text-align: left; border-bottom: 2px solid #005a87;">Campo WooCommerce</th>';
+    echo '<th style="padding: 12px; text-align: left; border-bottom: 2px solid #005a87;">Tipo</th>';
+    echo '<th style="padding: 12px; text-align: left; border-bottom: 2px solid #005a87;">Descripción</th>';
+    echo '</tr>';
+    echo '</thead>';
+    echo '<tbody>';
+    
+    $field_mappings = array(
+        array('codigo_producto', 'SKU', 'Texto', 'Código único del producto con prefijo ELIT_'),
+        array('nombre', 'Nombre del Producto', 'Texto', 'Título del producto'),
+        array('pvp_ars / pvp_usd', 'Precio', 'Moneda', 'Precio de venta (ARS o USD según configuración)'),
+        array('stock_total', 'Stock', 'Número', 'Cantidad disponible'),
+        array('nivel_stock', 'Estado de Stock', 'Estado', 'instock/onbackorder/outofstock'),
+        array('categoria', 'Categoría Principal', 'Taxonomía', 'Categoría de WooCommerce'),
+        array('sub_categoria', 'Subcategoría', 'Taxonomía', 'Subcategoría de WooCommerce'),
+        array('marca', 'Marca', 'Taxonomía', 'Marca como categoría'),
+        array('imagen', 'Imagen Destacada', 'Imagen', 'Imagen principal (.webp compatible)'),
+        array('miniatura', 'Galería de Imágenes', 'Imagen', 'Imágenes adicionales (.webp compatible)'),
+        array('peso', 'Peso', 'Número', 'Peso del producto para envío'),
+        array('ean', 'EAN/UPC', 'Meta', 'Código de barras del producto'),
+        array('garantia', 'Garantía', 'Meta', 'Información de garantía'),
+        array('gamer', 'Gaming', 'Meta', 'Indica si es producto gaming'),
+        array('atributos', 'Descripción Corta', 'Texto', 'Características del producto'),
+        array('link', 'Enlace ELIT', 'Meta', 'Link al producto en ELIT'),
+        array('precio', 'Precio Base', 'Meta', 'Precio de costo (sin impuestos)'),
+        array('impuesto_interno', 'Impuesto Interno', 'Meta', 'Impuesto interno aplicado'),
+        array('iva', 'IVA', 'Meta', 'Impuesto al valor agregado'),
+        array('markup', 'Markup ELIT', 'Meta', 'Markup aplicado por ELIT'),
+        array('cotizacion', 'Cotización USD', 'Meta', 'Cotización del dólar al momento de la consulta')
+    );
+    
+    foreach ($field_mappings as $index => $mapping) {
+        $row_class = ($index % 2 == 0) ? 'background: #f8f9fa;' : 'background: white;';
+        echo '<tr style="' . $row_class . '">';
+        echo '<td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-weight: bold; color: #e83e8c;">' . esc_html($mapping[0]) . '</td>';
+        echo '<td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: 500; color: #28a745;">' . esc_html($mapping[1]) . '</td>';
+        echo '<td style="padding: 10px; border-bottom: 1px solid #dee2e6; color: #6c757d;">' . esc_html($mapping[2]) . '</td>';
+        echo '<td style="padding: 10px; border-bottom: 1px solid #dee2e6; color: #495057;">' . esc_html($mapping[3]) . '</td>';
+        echo '</tr>';
+    }
+    
+    echo '</tbody>';
+    echo '</table>';
+    echo '</div>';
+    
+    // Información sobre compatibilidad de imágenes
+    echo '<div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 6px; border-left: 4px solid #007cba;">';
+    echo '<h4 style="margin-top: 0; color: #007cba;">🖼️ Compatibilidad de Imágenes</h4>';
+    echo '<ul style="margin-bottom: 0; color: #495057;">';
+    echo '<li><strong>Formatos soportados:</strong> .webp, .jpg, .jpeg, .png, .gif</li>';
+    echo '<li><strong>Optimización automática:</strong> Las imágenes .webp se cargan directamente para mejor rendimiento</li>';
+    echo '<li><strong>Fallback:</strong> Si .webp no es compatible, se usa la imagen original</li>';
+    echo '<li><strong>Imagen destacada:</strong> Se usa el campo "imagen" de ELIT</li>';
+    echo '<li><strong>Galería:</strong> Se usa el campo "miniatura" de ELIT para imágenes adicionales</li>';
+    echo '</ul>';
+    echo '</div>';
+    
+    // Información sobre procesamiento
+    echo '<div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">';
+    echo '<h4 style="margin-top: 0; color: #856404;">⚙️ Procesamiento de Datos</h4>';
+    echo '<ul style="margin-bottom: 0; color: #495057;">';
+    echo '<li><strong>Prefijo SKU:</strong> Se agrega automáticamente el prefijo configurado (ej: ELIT_)</li>';
+    echo '<li><strong>Markup:</strong> Se aplica el porcentaje configurado sobre los precios PVP</li>';
+    echo '<li><strong>Stock inteligente:</strong> Se determina el estado según nivel_stock y stock_total</li>';
+    echo '<li><strong>Categorías:</strong> Se crean automáticamente si no existen</li>';
+    echo '<li><strong>Metadatos:</strong> Se guardan campos adicionales como EAN, garantía, gaming</li>';
+    echo '</ul>';
+    echo '</div>';
+    
+    echo '</div>';
     submit_button();
     echo '</form>';
     echo '<form method="post" style="margin-top: 20px;">';

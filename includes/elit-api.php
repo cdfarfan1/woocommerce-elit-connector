@@ -238,7 +238,25 @@ class ELIT_API_Manager {
             'attributes' => self::get_field_value($elit_product, array('atributos'), array()),
             'currency' => self::get_elit_currency($elit_product),
             'created_date' => self::get_field_value($elit_product, array('creado')),
-            'updated_date' => self::get_field_value($elit_product, array('actualizado'))
+            'updated_date' => self::get_field_value($elit_product, array('actualizado')),
+            // Additional ELIT metadata
+            'meta_data' => array(
+                'elit_codigo_alfa' => self::get_field_value($elit_product, array('codigo_alfa')),
+                'elit_categoria' => self::get_field_value($elit_product, array('categoria')),
+                'elit_sub_categoria' => self::get_field_value($elit_product, array('sub_categoria')),
+                'elit_precio_base' => self::get_field_value($elit_product, array('precio'), 0),
+                'elit_impuesto_interno' => self::get_field_value($elit_product, array('impuesto_interno'), 0),
+                'elit_iva' => self::get_field_value($elit_product, array('iva'), 0),
+                'elit_markup' => self::get_field_value($elit_product, array('markup'), 0),
+                'elit_cotizacion' => self::get_field_value($elit_product, array('cotizacion'), 0),
+                'elit_pvp_ars' => self::get_field_value($elit_product, array('pvp_ars'), 0),
+                'elit_pvp_usd' => self::get_field_value($elit_product, array('pvp_usd'), 0),
+                'elit_stock_deposito_cliente' => self::get_field_value($elit_product, array('stock_deposito_cliente'), 0),
+                'elit_stock_deposito_cd' => self::get_field_value($elit_product, array('stock_deposito_cd'), 0),
+                'elit_moneda' => self::get_field_value($elit_product, array('moneda')),
+                'elit_imagen_original' => self::get_field_value($elit_product, array('imagen')),
+                'elit_miniatura_original' => self::get_field_value($elit_product, array('miniatura'))
+            )
         );
         
         // Remove empty short description override since we have a dedicated function
@@ -379,25 +397,85 @@ class ELIT_API_Manager {
     private static function get_elit_images($elit_product) {
         $images = array();
         
-        // Get images from 'imagenes' array (main images)
+        // Get main image from 'imagen' field (single image)
+        if (isset($elit_product['imagen']) && !empty($elit_product['imagen'])) {
+            $main_image = self::process_image_url($elit_product['imagen']);
+            if ($main_image) {
+                $images[] = $main_image;
+            }
+        }
+        
+        // Get images from 'imagenes' array (multiple images)
         if (isset($elit_product['imagenes']) && is_array($elit_product['imagenes'])) {
             foreach ($elit_product['imagenes'] as $img) {
-                if (is_string($img) && filter_var($img, FILTER_VALIDATE_URL)) {
-                    $images[] = $img;
+                if (is_string($img) && !empty($img)) {
+                    $processed_img = self::process_image_url($img);
+                    if ($processed_img && !in_array($processed_img, $images)) {
+                        $images[] = $processed_img;
+                    }
                 }
             }
         }
         
+        // Get thumbnails from 'miniatura' field (single thumbnail)
+        if (isset($elit_product['miniatura']) && !empty($elit_product['miniatura'])) {
+            $thumbnail = self::process_image_url($elit_product['miniatura']);
+            if ($thumbnail && !in_array($thumbnail, $images)) {
+                $images[] = $thumbnail;
+            }
+        }
+        
         // Get thumbnails from 'miniaturas' array as fallback
-        if (empty($images) && isset($elit_product['miniaturas']) && is_array($elit_product['miniaturas'])) {
+        if (isset($elit_product['miniaturas']) && is_array($elit_product['miniaturas'])) {
             foreach ($elit_product['miniaturas'] as $thumb) {
-                if (is_string($thumb) && filter_var($thumb, FILTER_VALIDATE_URL)) {
-                    $images[] = $thumb;
+                if (is_string($thumb) && !empty($thumb)) {
+                    $processed_thumb = self::process_image_url($thumb);
+                    if ($processed_thumb && !in_array($processed_thumb, $images)) {
+                        $images[] = $processed_thumb;
+                    }
                 }
             }
         }
         
         return array_unique($images);
+    }
+    
+    /**
+     * Process image URL for .webp compatibility
+     * 
+     * @since 1.0.0
+     * @param string $url Image URL
+     * @return string|false Processed image URL or false if invalid
+     */
+    private static function process_image_url($url) {
+        if (!is_string($url) || empty($url)) {
+            return false;
+        }
+        
+        // Validate URL
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+        
+        // Check if URL is already .webp
+        if (strpos($url, '.webp') !== false) {
+            return $url;
+        }
+        
+        // Check if URL is from ELIT images domain
+        if (strpos($url, 'images.elit.com.ar') !== false) {
+            // ELIT provides .webp versions, try to get it
+            $webp_url = str_replace(array('.jpg', '.jpeg', '.png', '.gif'), '.webp', $url);
+            
+            // Test if .webp version exists
+            $response = wp_remote_head($webp_url, array('timeout' => 5));
+            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                return $webp_url;
+            }
+        }
+        
+        // Return original URL if .webp not available
+        return $url;
     }
     
     /**
