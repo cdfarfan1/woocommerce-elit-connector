@@ -229,6 +229,39 @@ Siempre verificar el estado de las credenciales de API antes de implementar la i
 
 ---
 
+### Error #006 - Constante ELIT_API_URL no definida
+**Fecha**: 15 Septiembre 2025  
+**Error**: `Undefined constant ELIT_API_Manager::ELIT_API_URL`  
+**Archivo**: `includes/elit-api.php:534`  
+
+#### 🔍 Descripción:
+La función `get_products_batch()` está usando `self::ELIT_API_URL` pero la constante se llama `$api_url` (con `$`).
+
+#### 📝 Error Stack:
+```
+Fatal error: Uncaught Error: Undefined constant ELIT_API_Manager::ELIT_API_URL 
+in includes/elit-api.php:534
+```
+
+#### ✅ Solución Aplicada:
+Cambiar `self::ELIT_API_URL` por `self::$api_url` en todas las funciones.
+
+#### 🔧 Código Corregido:
+```php
+// ANTES (incorrecto)
+$url = self::ELIT_API_URL . '?limit=' . $limit . '&offset=' . $offset;
+
+// DESPUÉS (correcto)
+$url = self::$api_url . '/productos?limit=' . $limit . '&offset=' . $offset;
+```
+
+#### 📅 Estado: **CORREGIDO** ✅
+
+#### 📚 Lección Aprendida:
+Verificar que las constantes y variables estén definidas correctamente antes de usarlas.
+
+---
+
 ## 🔧 Checklist de Prevención de Errores
 
 ### ✅ Antes de cada release:

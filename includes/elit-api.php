@@ -92,7 +92,7 @@ class ELIT_API_Manager {
                 'blocking' => true,
             );
             
-            $url = self::ELIT_API_URL . '/' . ltrim($endpoint, '/');
+            $url = self::$api_url . '/' . ltrim($endpoint, '/');
             NB_Logger::info('Realizando petición a ELIT: ' . $url);
             
             $response = wp_remote_post($url, $args);
@@ -531,7 +531,7 @@ class ELIT_API_Manager {
             return array();
         }
         
-        $url = self::ELIT_API_URL . '?limit=' . $limit . '&offset=' . $offset;
+        $url = self::$api_url . '/productos?limit=' . $limit . '&offset=' . $offset;
         
         $response = self::make_request($url, $credentials);
         
@@ -570,7 +570,7 @@ class ELIT_API_Manager {
         NB_Logger::info('Probando conexión con ELIT API');
         
         // Test connection with minimal request
-        $url = self::ELIT_API_URL . '?limit=1';
+        $url = self::$api_url . '/productos?limit=1';
         $response = self::make_request($url, $credentials);
         
         if (is_wp_error($response)) {
