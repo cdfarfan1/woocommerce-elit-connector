@@ -44,7 +44,7 @@ class ELIT_API_Manager {
      * @var int
      * @since 1.0.0
      */
-    private static $max_limit = 10;
+    private static $max_limit = 100; // ELIT API limit
     
     /**
      * Get authentication credentials
@@ -215,11 +215,11 @@ class ELIT_API_Manager {
             return null;
         }
         
-        // Map ELIT fields to WooCommerce format based on real API response
+        // Map ELIT fields to WooCommerce format using exact API fields
         $transformed = array(
-            'sku' => self::get_field_value($elit_product, array('codigo_producto', 'codigo_alfa', 'id')),
+            // Core WooCommerce fields
+            'sku' => self::get_field_value($elit_product, array('codigo_producto')),
             'name' => self::get_field_value($elit_product, array('nombre')),
-            'description' => self::get_field_value($elit_product, array('descripcion')),
             'short_description' => self::build_short_description($elit_product),
             'price' => self::get_elit_price($elit_product),
             'stock_quantity' => self::get_elit_stock($elit_product),
@@ -227,35 +227,42 @@ class ELIT_API_Manager {
             'categories' => self::get_elit_categories($elit_product),
             'images' => self::get_elit_images($elit_product),
             'weight' => self::get_field_value($elit_product, array('peso'), 0),
-            'dimensions' => self::get_elit_dimensions($elit_product),
             'brand' => self::get_field_value($elit_product, array('marca')),
             'warranty' => self::get_field_value($elit_product, array('garantia')),
             'ean' => self::get_field_value($elit_product, array('ean')),
-            'stock_level' => self::get_field_value($elit_product, array('nivel_stock')),
             'is_gamer' => self::get_field_value($elit_product, array('gamer'), false),
-            'elit_id' => self::get_field_value($elit_product, array('id')),
-            'elit_link' => self::get_field_value($elit_product, array('link')),
             'attributes' => self::get_field_value($elit_product, array('atributos'), array()),
-            'currency' => self::get_elit_currency($elit_product),
-            'created_date' => self::get_field_value($elit_product, array('creado')),
-            'updated_date' => self::get_field_value($elit_product, array('actualizado')),
-            // Additional ELIT metadata
+            
+            // ELIT specific metadata - using exact API field names
             'meta_data' => array(
+                'elit_id' => self::get_field_value($elit_product, array('id')),
                 'elit_codigo_alfa' => self::get_field_value($elit_product, array('codigo_alfa')),
+                'elit_codigo_producto' => self::get_field_value($elit_product, array('codigo_producto')),
                 'elit_categoria' => self::get_field_value($elit_product, array('categoria')),
                 'elit_sub_categoria' => self::get_field_value($elit_product, array('sub_categoria')),
-                'elit_precio_base' => self::get_field_value($elit_product, array('precio'), 0),
+                'elit_marca' => self::get_field_value($elit_product, array('marca')),
+                'elit_precio' => self::get_field_value($elit_product, array('precio'), 0),
                 'elit_impuesto_interno' => self::get_field_value($elit_product, array('impuesto_interno'), 0),
                 'elit_iva' => self::get_field_value($elit_product, array('iva'), 0),
+                'elit_moneda' => self::get_field_value($elit_product, array('moneda')),
                 'elit_markup' => self::get_field_value($elit_product, array('markup'), 0),
                 'elit_cotizacion' => self::get_field_value($elit_product, array('cotizacion'), 0),
-                'elit_pvp_ars' => self::get_field_value($elit_product, array('pvp_ars'), 0),
                 'elit_pvp_usd' => self::get_field_value($elit_product, array('pvp_usd'), 0),
+                'elit_pvp_ars' => self::get_field_value($elit_product, array('pvp_ars'), 0),
+                'elit_peso' => self::get_field_value($elit_product, array('peso'), 0),
+                'elit_ean' => self::get_field_value($elit_product, array('ean')),
+                'elit_nivel_stock' => self::get_field_value($elit_product, array('nivel_stock')),
+                'elit_stock_total' => self::get_field_value($elit_product, array('stock_total'), 0),
                 'elit_stock_deposito_cliente' => self::get_field_value($elit_product, array('stock_deposito_cliente'), 0),
                 'elit_stock_deposito_cd' => self::get_field_value($elit_product, array('stock_deposito_cd'), 0),
-                'elit_moneda' => self::get_field_value($elit_product, array('moneda')),
-                'elit_imagen_original' => self::get_field_value($elit_product, array('imagen')),
-                'elit_miniatura_original' => self::get_field_value($elit_product, array('miniatura'))
+                'elit_garantia' => self::get_field_value($elit_product, array('garantia')),
+                'elit_link' => self::get_field_value($elit_product, array('link')),
+                'elit_imagenes' => self::get_field_value($elit_product, array('imagenes'), array()),
+                'elit_miniaturas' => self::get_field_value($elit_product, array('miniaturas'), array()),
+                'elit_atributos' => self::get_field_value($elit_product, array('atributos'), array()),
+                'elit_gamer' => self::get_field_value($elit_product, array('gamer'), false),
+                'elit_creado' => self::get_field_value($elit_product, array('creado')),
+                'elit_actualizado' => self::get_field_value($elit_product, array('actualizado'))
             )
         );
         
@@ -397,15 +404,7 @@ class ELIT_API_Manager {
     private static function get_elit_images($elit_product) {
         $images = array();
         
-        // Get main image from 'imagen' field (single image)
-        if (isset($elit_product['imagen']) && !empty($elit_product['imagen'])) {
-            $main_image = self::process_image_url($elit_product['imagen']);
-            if ($main_image) {
-                $images[] = $main_image;
-            }
-        }
-        
-        // Get images from 'imagenes' array (multiple images)
+        // Get images from 'imagenes' array (main images) - according to ELIT API docs
         if (isset($elit_product['imagenes']) && is_array($elit_product['imagenes'])) {
             foreach ($elit_product['imagenes'] as $img) {
                 if (is_string($img) && !empty($img)) {
@@ -417,15 +416,7 @@ class ELIT_API_Manager {
             }
         }
         
-        // Get thumbnails from 'miniatura' field (single thumbnail)
-        if (isset($elit_product['miniatura']) && !empty($elit_product['miniatura'])) {
-            $thumbnail = self::process_image_url($elit_product['miniatura']);
-            if ($thumbnail && !in_array($thumbnail, $images)) {
-                $images[] = $thumbnail;
-            }
-        }
-        
-        // Get thumbnails from 'miniaturas' array as fallback
+        // Get thumbnails from 'miniaturas' array as additional images
         if (isset($elit_product['miniaturas']) && is_array($elit_product['miniaturas'])) {
             foreach ($elit_product['miniaturas'] as $thumb) {
                 if (is_string($thumb) && !empty($thumb)) {
@@ -486,8 +477,13 @@ class ELIT_API_Manager {
      * @return int Stock quantity
      */
     private static function get_elit_stock($elit_product) {
-        // Priority order: stock_deposito_cliente > stock_total > stock_deposito_cd
-        $stock_fields = array('stock_deposito_cliente', 'stock_total', 'stock_deposito_cd');
+        // Use stock_total as primary source according to ELIT API docs
+        if (isset($elit_product['stock_total']) && is_numeric($elit_product['stock_total'])) {
+            return intval($elit_product['stock_total']);
+        }
+        
+        // Fallback to other stock fields
+        $stock_fields = array('stock_deposito_cliente', 'stock_deposito_cd');
         
         foreach ($stock_fields as $field) {
             if (isset($elit_product[$field]) && is_numeric($elit_product[$field])) {
@@ -512,9 +508,10 @@ class ELIT_API_Manager {
         $stock_quantity = self::get_elit_stock($elit_product);
         $stock_level = self::get_field_value($elit_product, array('nivel_stock'), '');
         
-        if ($stock_quantity > 0) {
+        // Use nivel_stock field according to ELIT API docs
+        if ($stock_level === 'alto' && $stock_quantity > 0) {
             return 'instock';
-        } elseif ($stock_level === 'bajo') {
+        } elseif ($stock_level === 'bajo' && $stock_quantity > 0) {
             return 'onbackorder'; // Permite pedidos pero indica stock bajo
         } else {
             return 'outofstock';

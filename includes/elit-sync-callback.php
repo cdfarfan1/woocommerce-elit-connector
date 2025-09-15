@@ -46,9 +46,9 @@ function elit_callback($syncDescription = false) {
         NB_Logger::info('Iniciando sincronización con ELIT API');
 
         // Obtener productos de ELIT
-        // Procesar solo un lote pequeño por vez
+        // Procesar de 100 en 100 según límite de API ELIT
         $offset = get_option('elit_sync_offset', 0);
-        $limit = 5; // Solo 5 productos por vez
+        $limit = 100; // Límite máximo de ELIT API
         
         // Intentar obtener productos de ELIT API
         $elit_products = ELIT_API_Manager::get_products_batch($offset, $limit);
