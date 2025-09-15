@@ -18,19 +18,20 @@ define('VERSION_ELIT', '1.0.0');
 define('ELIT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('ELIT_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Include only essential files for ELIT (with error checking)
-$required_files = array(
-    'includes/activation.php',
-    'includes/admin-hooks.php', 
-    'includes/cron-hooks.php',
-    'includes/utils.php',
-    'includes/price-calculator.php',
-    'includes/modals.php',
-    'includes/product-sync.php',
-    'includes/settings.php',
-    'includes/elit-api.php',
-    'includes/elit-sync-callback.php'
-);
+        // Include only essential files for ELIT (with error checking)
+        $required_files = array(
+            'includes/activation.php',
+            'includes/admin-hooks.php',
+            'includes/cron-hooks.php',
+            'includes/utils.php',
+            'includes/price-calculator.php',
+            'includes/modals.php',
+            'includes/product-sync.php',
+            'includes/settings.php',
+            'includes/elit-api.php',
+            'includes/elit-sync-callback.php',
+            'includes/demo-mode.php'
+        );
 
 foreach ($required_files as $file) {
     $file_path = ELIT_PLUGIN_PATH . $file;

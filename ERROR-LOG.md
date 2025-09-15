@@ -224,6 +224,10 @@ if ($response_code >= 400) {
 
 #### 📅 Estado: **PENDIENTE DE CREDENCIALES** ⚠️
 
+#### 🔄 Credenciales Probadas:
+1. **User ID:** 24560, **Token:** z9qrpjjgnwq → ❌ Deshabilitado
+2. **User ID:** 14679, **Token:** 4ou95wmie1q → ❌ Deshabilitado
+
 #### 📚 Lección Aprendida:
 Siempre verificar el estado de las credenciales de API antes de implementar la integración completa.
 

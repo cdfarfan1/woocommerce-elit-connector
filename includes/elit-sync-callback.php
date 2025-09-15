@@ -50,13 +50,20 @@ function elit_callback($syncDescription = false) {
         $offset = get_option('elit_sync_offset', 0);
         $limit = 5; // Solo 5 productos por vez
         
+        // Intentar obtener productos de ELIT API
         $elit_products = ELIT_API_Manager::get_products_batch($offset, $limit);
         
+        // Si no hay productos de ELIT API, usar modo demo
         if (empty($elit_products)) {
-            // Si no hay más productos, reiniciar el offset
-            update_option('elit_sync_offset', 0);
-            NB_Logger::info('Sincronización por lotes completada. Reiniciando offset.');
-            return 'Sincronización por lotes completada.';
+            NB_Logger::info('API ELIT no disponible, usando modo DEMO');
+            $elit_products = ELIT_Demo_API::get_products_batch($offset, $limit);
+            
+            if (empty($elit_products)) {
+                // Si no hay más productos demo, reiniciar el offset
+                update_option('elit_sync_offset', 0);
+                NB_Logger::info('Sincronización DEMO completada. Reiniciando offset.');
+                return 'Sincronización DEMO completada.';
+            }
         }
         
         // Actualizar offset para la próxima ejecución
@@ -67,7 +74,15 @@ function elit_callback($syncDescription = false) {
         // Transformar productos de ELIT al formato WooCommerce
         $transformed_products = array();
         foreach ($elit_products as $elit_product) {
-            $transformed = ELIT_API_Manager::transform_product_data($elit_product);
+            // Usar transformación de API o Demo según corresponda
+            if (isset($elit_product['id']) && $elit_product['id'] > 1000) {
+                // Es un producto demo
+                $transformed = ELIT_Demo_API::transform_product_data($elit_product);
+            } else {
+                // Es un producto real de ELIT API
+                $transformed = ELIT_API_Manager::transform_product_data($elit_product);
+            }
+            
             if ($transformed) {
                 $transformed_products[] = $transformed;
             }
