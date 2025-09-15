@@ -28,9 +28,9 @@ function elit_callback($syncDescription = false) {
         $original_max_execution_time = ini_get('max_execution_time');
         $original_memory_limit = ini_get('memory_limit');
 
-        // Establecer límites más conservadores para evitar timeout
-        ini_set('max_execution_time', '300'); // 5 minutos máximo
-        ini_set('memory_limit', '512M'); // 512MB máximo
+        // Establecer límites ultra-conservadores para servidores estrictos
+        ini_set('max_execution_time', '120'); // 2 minutos máximo
+        ini_set('memory_limit', '256M'); // 256MB máximo
 
         $start_time = microtime(true);
 
@@ -90,11 +90,11 @@ function elit_callback($syncDescription = false) {
             'errors' => array()
         );
 
-        // Verificar tiempo transcurrido antes de sincronización
+        // Verificar tiempo transcurrido antes de sincronización (más estricto)
         $elapsed_time = microtime(true) - $start_time;
-        if ($elapsed_time > 180) { // 3 minutos
+        if ($elapsed_time > 60) { // 1 minuto
             NB_Logger::warning('Tiempo límite alcanzado antes de sincronización. Procesando solo productos obtenidos.');
-            $transformed_products = array_slice($transformed_products, 0, 50); // Limitar a 50 productos
+            $transformed_products = array_slice($transformed_products, 0, 25); // Limitar a 25 productos
         }
         
         // Sincronizar productos usando la clase existente de sincronización

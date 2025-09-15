@@ -36,7 +36,7 @@ class ELIT_API_Manager {
      * @var int
      * @since 1.0.0
      */
-    private static $max_limit = 50;
+    private static $max_limit = 25;
     
     /**
      * Get authentication credentials
