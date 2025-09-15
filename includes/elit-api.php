@@ -92,7 +92,7 @@ class ELIT_API_Manager {
                 'blocking' => true,
             );
             
-            $url = self::$api_url . '/' . ltrim($endpoint, '/');
+            $url = self::ELIT_API_URL . '/' . ltrim($endpoint, '/');
             NB_Logger::info('Realizando petición a ELIT: ' . $url);
             
             $response = wp_remote_post($url, $args);
@@ -570,11 +570,37 @@ class ELIT_API_Manager {
         NB_Logger::info('Probando conexión con ELIT API');
         
         // Test connection with minimal request
-        $response = self::make_request('productos?limit=1');
+        $url = self::ELIT_API_URL . '?limit=1';
+        $response = self::make_request($url, $credentials);
         
-        if ($response !== null && is_array($response) && isset($response['resultado'])) {
-            $total_products = $response['paginador']['total'] ?? 0;
-            $product_count = count($response['resultado']);
+        if (is_wp_error($response)) {
+            return array(
+                'success' => false,
+                'message' => 'Error al conectar con ELIT API: ' . $response->get_error_message()
+            );
+        }
+        
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code >= 400) {
+            return array(
+                'success' => false,
+                'message' => 'Error HTTP ' . $response_code . ' al conectar con ELIT API'
+            );
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return array(
+                'success' => false,
+                'message' => 'Error al decodificar respuesta de ELIT API: ' . json_last_error_msg()
+            );
+        }
+        
+        if (isset($data['resultado']) && is_array($data['resultado'])) {
+            $total_products = $data['paginador']['total'] ?? 0;
+            $product_count = count($data['resultado']);
             return array(
                 'success' => true,
                 'message' => "Conexión exitosa con ELIT API. Total de productos disponibles: {$total_products}"
@@ -582,7 +608,7 @@ class ELIT_API_Manager {
         } else {
             return array(
                 'success' => false,
-                'message' => 'Error al conectar con ELIT API. Verifica las credenciales (User ID: ' . $credentials['user_id'] . ').'
+                'message' => 'Respuesta inesperada de ELIT API. Verifica las credenciales (User ID: ' . $credentials['user_id'] . ').'
             );
         }
     }

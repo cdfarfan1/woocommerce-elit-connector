@@ -185,6 +185,50 @@ Un plugin de WordPress debe ser lo más liviano posible. Solo incluir archivos e
 
 ---
 
+### Error #005 - Cliente Deshabilitado en API ELIT
+**Fecha**: 15 Septiembre 2025  
+**Error**: `{"code":400,"message":"Cliente Deshabilitado"}`  
+**Archivo**: `includes/elit-api.php`  
+**Línea**: `make_request()`  
+
+#### 🔍 Descripción:
+La API de ELIT devuelve error 400 con mensaje "Cliente Deshabilitado" al intentar conectar con las credenciales proporcionadas.
+
+#### 📝 Error Stack:
+```
+Response Code: 400
+Response Body: {"code":400,"message":"Cliente Deshabilitado"}
+```
+
+#### 🔍 Causa:
+Las credenciales de ELIT (User ID: 24560, Token: z9qrpjjgnwq) están deshabilitadas o no son válidas.
+
+#### ✅ Solución Requerida:
+1. **Verificar credenciales** con ELIT
+2. **Solicitar nuevas credenciales** si es necesario
+3. **Activar cuenta** en el panel de ELIT
+4. **Verificar estado** del cliente en ELIT
+
+#### 🔧 Código para manejo de error:
+```php
+// En test_connection() - manejo de error 400
+if ($response_code >= 400) {
+    $data = json_decode($body, true);
+    $error_message = $data['message'] ?? 'Error HTTP ' . $response_code;
+    return array(
+        'success' => false,
+        'message' => 'Error de API ELIT: ' . $error_message
+    );
+}
+```
+
+#### 📅 Estado: **PENDIENTE DE CREDENCIALES** ⚠️
+
+#### 📚 Lección Aprendida:
+Siempre verificar el estado de las credenciales de API antes de implementar la integración completa.
+
+---
+
 ## 🔧 Checklist de Prevención de Errores
 
 ### ✅ Antes de cada release:
