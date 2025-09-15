@@ -171,7 +171,7 @@ function elit_options_page()
 
     if (isset($_POST['update_all'])) {
         echo '<p><details><summary><strong>Respuesta del conector ELIT</strong></summary>';
-        echo '<ul>' . elit_smart_callback() . '</ul>';
+        echo '<ul>' . elit_callback() . '</ul>';
         echo '</details></p>';
         elit_show_last_update();
     }

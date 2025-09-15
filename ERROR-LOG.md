@@ -50,6 +50,36 @@ echo " disabled>Actualizado: ' . VERSION_ELIT . '</button>';
 
 #### 📅 Estado: **CORREGIDO** ✅
 
+---
+
+### Error #002 - Función elit_smart_callback() no definida
+**Fecha**: 15 Septiembre 2025  
+**Archivo**: `includes/settings.php:174`  
+**Error**: `Call to undefined function elit_smart_callback()`
+
+#### 🔍 Descripción:
+El archivo `settings.php` está llamando a la función `elit_smart_callback()` que no está definida en el contexto cuando se ejecuta la página de configuración.
+
+#### 📝 Error Stack:
+```
+Fatal error: Uncaught Error: Call to undefined function elit_smart_callback() 
+in includes/settings.php:174
+```
+
+#### ✅ Solución Aplicada:
+Cambiar `elit_smart_callback()` por `elit_callback()` en `settings.php:174`.
+
+#### 🔧 Código Corregido:
+```php
+// ANTES (incorrecto)
+echo '<ul>' . elit_smart_callback() . '</ul>';
+
+// DESPUÉS (correcto)
+echo '<ul>' . elit_callback() . '</ul>';
+```
+
+#### 📅 Estado: **CORREGIDO** ✅
+
 #### 📚 Lección Aprendida:
 Al adaptar un plugin existente, **SIEMPRE** buscar y reemplazar TODAS las constantes, variables y funciones que hagan referencia al plugin original.
 
