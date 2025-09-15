@@ -31,6 +31,14 @@ class ELIT_API_Manager {
     private static $api_url = 'https://clientes.elit.com.ar/v1/api';
     
     /**
+     * ELIT CSV API URL (working endpoint)
+     * 
+     * @var string
+     * @since 1.0.0
+     */
+    private static $csv_api_url = 'https://clientes.elit.com.ar/v1/api/productos/csv';
+    
+    /**
      * Maximum products per API request
      * 
      * @var int
@@ -517,10 +525,10 @@ class ELIT_API_Manager {
     }
     
     /**
-     * Get products in small batches for processing
+     * Get products from ELIT CSV API (working endpoint)
      * 
-     * @param int $offset Starting offset
-     * @param int $limit Maximum products to fetch
+     * @param int $offset Starting offset (not used in CSV, but kept for compatibility)
+     * @param int $limit Maximum products to fetch (not used in CSV, but kept for compatibility)
      * @return array Array of products or empty array
      * @since 1.0.0
      */
@@ -531,28 +539,98 @@ class ELIT_API_Manager {
             return array();
         }
         
-        $url = self::$api_url . '/productos?limit=' . $limit . '&offset=' . $offset;
+        // Use CSV endpoint which works with these credentials
+        $url = self::$csv_api_url . '?user_id=' . $credentials['user_id'] . '&token=' . $credentials['token'];
         
-        $response = self::make_request($url, $credentials);
+        NB_Logger::info('Obteniendo productos desde CSV ELIT: ' . $url);
+        
+        $response = wp_remote_get($url, array(
+            'timeout' => 60,
+            'headers' => array(
+                'User-Agent' => 'ELIT-WooCommerce-Connector/1.0.0'
+            )
+        ));
         
         if (is_wp_error($response)) {
-            NB_Logger::error('Error en batch API ELIT: ' . $response->get_error_message());
+            NB_Logger::error('Error en CSV API ELIT: ' . $response->get_error_message());
             return array();
         }
         
-        if (!$response || !isset($response['body'])) {
-            NB_Logger::error('Respuesta vacía de batch API ELIT');
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code >= 400) {
+            NB_Logger::error('Error HTTP ' . $response_code . ' en CSV API ELIT');
             return array();
         }
         
-        $data = json_decode($response['body'], true);
-        
-        if (!isset($data['resultado']) || !is_array($data['resultado'])) {
-            NB_Logger::warning('Respuesta de batch API ELIT no válida');
+        $csv_data = wp_remote_retrieve_body($response);
+        if (empty($csv_data)) {
+            NB_Logger::error('Respuesta vacía de CSV API ELIT');
             return array();
         }
         
-        return $data['resultado'];
+        // Parse CSV data
+        $products = self::parse_csv_products($csv_data);
+        
+        // Apply offset and limit for compatibility
+        if ($offset > 0 || $limit < count($products)) {
+            $products = array_slice($products, $offset, $limit);
+        }
+        
+        NB_Logger::info('Productos obtenidos desde CSV ELIT: ' . count($products));
+        return $products;
+    }
+    
+    /**
+     * Parse CSV products data
+     * 
+     * @param string $csv_data CSV content
+     * @return array Array of products
+     * @since 1.0.0
+     */
+    private static function parse_csv_products($csv_data) {
+        $lines = explode("\n", $csv_data);
+        $products = array();
+        
+        if (count($lines) < 2) {
+            return $products;
+        }
+        
+        // Get headers from first line
+        $headers = str_getcsv($lines[0]);
+        
+        // Process each product line
+        for ($i = 1; $i < count($lines); $i++) {
+            $line = trim($lines[$i]);
+            if (empty($line)) continue;
+            
+            $values = str_getcsv($line);
+            if (count($values) !== count($headers)) continue;
+            
+            $product = array();
+            for ($j = 0; $j < count($headers); $j++) {
+                $key = $headers[$j];
+                $value = $values[$j];
+                
+                // Convert numeric values
+                if (in_array($key, ['id', 'precio', 'impuesto_interno', 'iva', 'markup', 'cotizacion', 'pvp_usd', 'pvp_ars', 'peso', 'stock_total', 'stock_deposito_cliente', 'stock_deposito_cd'])) {
+                    $value = is_numeric($value) ? floatval($value) : 0;
+                }
+                
+                // Convert boolean values
+                if ($key === 'gamer') {
+                    $value = $value === 'true';
+                }
+                
+                $product[$key] = $value;
+            }
+            
+            // Only add products with valid data
+            if (!empty($product['codigo_producto']) && !empty($product['nombre'])) {
+                $products[] = $product;
+            }
+        }
+        
+        return $products;
     }
 
     /**
@@ -574,9 +652,14 @@ class ELIT_API_Manager {
         
         NB_Logger::info('Probando conexión con ELIT API');
         
-        // Test connection with minimal request
-        $url = self::$api_url . '/productos?limit=1';
-        $response = self::make_request($url, $credentials);
+        // Test connection with CSV endpoint (working)
+        $url = self::$csv_api_url . '?user_id=' . $credentials['user_id'] . '&token=' . $credentials['token'];
+        $response = wp_remote_get($url, array(
+            'timeout' => 30,
+            'headers' => array(
+                'User-Agent' => 'ELIT-WooCommerce-Connector/1.0.0'
+            )
+        ));
         
         if (is_wp_error($response)) {
             return array(
@@ -585,42 +668,35 @@ class ELIT_API_Manager {
             );
         }
         
-        if (!$response || !isset($response['response']['code'])) {
-            return array(
-                'success' => false,
-                'message' => 'Respuesta vacía de ELIT API'
-            );
-        }
-        
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code >= 400) {
             return array(
                 'success' => false,
-                'message' => 'Error HTTP ' . $response_code . ' al conectar con ELIT API'
+                'message' => 'Error HTTP ' . $response_code . ' al conectar con ELIT CSV API'
             );
         }
         
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body, true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        $csv_data = wp_remote_retrieve_body($response);
+        if (empty($csv_data)) {
             return array(
                 'success' => false,
-                'message' => 'Error al decodificar respuesta de ELIT API: ' . json_last_error_msg()
+                'message' => 'Respuesta vacía de ELIT CSV API'
             );
         }
         
-        if (isset($data['resultado']) && is_array($data['resultado'])) {
-            $total_products = $data['paginador']['total'] ?? 0;
-            $product_count = count($data['resultado']);
+        // Parse CSV to count products
+        $products = self::parse_csv_products($csv_data);
+        $total_products = count($products);
+        
+        if ($total_products > 0) {
             return array(
                 'success' => true,
-                'message' => "Conexión exitosa con ELIT API. Total de productos disponibles: {$total_products}"
+                'message' => "Conexión exitosa con ELIT CSV API. Total de productos disponibles: {$total_products}"
             );
         } else {
             return array(
                 'success' => false,
-                'message' => 'Respuesta inesperada de ELIT API. Verifica las credenciales (User ID: ' . $credentials['user_id'] . ').'
+                'message' => 'No se encontraron productos en ELIT CSV API. Verifica las credenciales (User ID: ' . $credentials['user_id'] . ').'
             );
         }
     }

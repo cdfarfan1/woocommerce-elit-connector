@@ -13,19 +13,27 @@ if (!defined('ABSPATH')) {
 
 /**
  * Plugin activation function (minimal and safe)
- * 
+ *
  * @since 1.0.0
  * @return void
  */
 function nb_activation() {
-    // Check user capabilities
-    if (!current_user_can('activate_plugins')) {
+        // Check user capabilities
+        if (!current_user_can('activate_plugins')) {
         wp_die('No tienes permisos para activar plugins.');
     }
     
     // Set minimal default options for ELIT (no complex operations)
     if (get_option('elit_sku_prefix') === false) {
         add_option('elit_sku_prefix', 'ELIT_');
+    }
+    
+    if (get_option('elit_user_id') === false) {
+        add_option('elit_user_id', '14679');
+    }
+    
+    if (get_option('elit_token') === false) {
+        add_option('elit_token', '4ou95wmie1q');
     }
     
     if (get_option('elit_markup_percentage') === false) {
@@ -53,7 +61,7 @@ function nb_activation() {
 
 /**
  * Plugin deactivation function (minimal and safe)
- * 
+ *
  * @since 1.0.0
  * @return void
  */
