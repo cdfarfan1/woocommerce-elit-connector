@@ -262,6 +262,46 @@ Verificar que las constantes y variables estén definidas correctamente antes de
 
 ---
 
+### Error #007 - Acceso a array offset en valor null
+**Fecha**: 15 Septiembre 2025  
+**Error**: `Trying to access array offset on value of type null`  
+**Archivo**: `includes/elit-api.php:543`  
+
+#### 🔍 Descripción:
+El código intenta acceder a `$response['body']` cuando `$response` es `null` o no tiene la clave `'body'`.
+
+#### 📝 Error Stack:
+```
+Warning: Trying to access array offset on value of type null 
+in includes/elit-api.php on line 543
+```
+
+#### ✅ Solución Aplicada:
+Agregar verificaciones de seguridad antes de acceder a arrays:
+- Verificar que `$response` no sea `null`
+- Verificar que exista la clave `'body'` o `'response'`
+- Retornar array vacío si la respuesta es inválida
+
+#### 🔧 Código Corregido:
+```php
+// ANTES (problemático)
+$data = json_decode($response['body'], true);
+
+// DESPUÉS (seguro)
+if (!$response || !isset($response['body'])) {
+    NB_Logger::error('Respuesta vacía de batch API ELIT');
+    return array();
+}
+$data = json_decode($response['body'], true);
+```
+
+#### 📅 Estado: **CORREGIDO** ✅
+
+#### 📚 Lección Aprendida:
+Siempre verificar que los arrays no sean `null` y contengan las claves esperadas antes de acceder a ellas.
+
+---
+
 ## 🔧 Checklist de Prevención de Errores
 
 ### ✅ Antes de cada release:

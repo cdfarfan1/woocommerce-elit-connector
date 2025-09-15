@@ -540,6 +540,11 @@ class ELIT_API_Manager {
             return array();
         }
         
+        if (!$response || !isset($response['body'])) {
+            NB_Logger::error('Respuesta vacía de batch API ELIT');
+            return array();
+        }
+        
         $data = json_decode($response['body'], true);
         
         if (!isset($data['resultado']) || !is_array($data['resultado'])) {
@@ -577,6 +582,13 @@ class ELIT_API_Manager {
             return array(
                 'success' => false,
                 'message' => 'Error al conectar con ELIT API: ' . $response->get_error_message()
+            );
+        }
+        
+        if (!$response || !isset($response['response']['code'])) {
+            return array(
+                'success' => false,
+                'message' => 'Respuesta vacía de ELIT API'
             );
         }
         
