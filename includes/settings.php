@@ -29,8 +29,8 @@ function elit_options_page()
     $plugin_url = plugin_dir_url(__FILE__);
     $icon_url = $plugin_url . '../assets/icon-128x128.png';
 
-    $latest_commit = get_latest_version_nb();
-    $show_new_version_button = ($latest_commit !== VERSION_NB);
+    $latest_commit = get_latest_version_elit();
+    $show_new_version_button = ($latest_commit !== VERSION_ELIT);
 
     echo '<div class="wrap" style="display: flex; justify-content: center; align-items: center; height: 100%;">';
     echo '<div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; max-width: 600px; width: 100%;">';
@@ -62,7 +62,7 @@ function elit_options_page()
             border-radius: 5px;
             border: none;
             background-color: #e0e0e0;
-        " disabled>Actualizado: ' . VERSION_NB . '</button>';
+        " disabled>Actualizado: ' . VERSION_ELIT . '</button>';
         echo '</form>';
     }
     echo '</section>';
@@ -284,7 +284,7 @@ function nb_update_connector()
 }
 
 /**
- * Obtiene la última versión disponible del plugin
+ * Obtiene la última versión disponible del plugin ELIT
  * 
  * Consulta el repositorio de GitHub para obtener la versión más reciente
  * del plugin desde el archivo principal del repositorio.
@@ -292,10 +292,10 @@ function nb_update_connector()
  * @since 1.0.0
  * @return string La versión más reciente o mensaje de error
  */
-function get_latest_version_nb()
+function get_latest_version_elit()
 {
     // URL del archivo PHP que contiene la versión
-    $file_url = 'https://raw.githubusercontent.com/New-Bytes/woocommerce-newbytes/main/woocommerce-newbytes.php';
+    $file_url = 'https://raw.githubusercontent.com/cdfarfan1/woocommerce-elit-connector/main/woocommerce-elit-connector.php';
 
     // Obtener el contenido del archivo
     $response = wp_remote_get($file_url);
