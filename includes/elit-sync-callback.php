@@ -29,8 +29,8 @@ function elit_callback($syncDescription = false) {
         $original_memory_limit = ini_get('memory_limit');
 
         // Establecer límites ultra-conservadores para servidores estrictos
-        ini_set('max_execution_time', '120'); // 2 minutos máximo
-        ini_set('memory_limit', '256M'); // 256MB máximo
+        ini_set('max_execution_time', '60'); // 1 minuto máximo
+        ini_set('memory_limit', '128M'); // 128MB máximo
 
         $start_time = microtime(true);
 
@@ -46,14 +46,23 @@ function elit_callback($syncDescription = false) {
         NB_Logger::info('Iniciando sincronización con ELIT API');
 
         // Obtener productos de ELIT
-        $elit_products = ELIT_API_Manager::get_all_products();
+        // Procesar solo un lote pequeño por vez
+        $offset = get_option('elit_sync_offset', 0);
+        $limit = 5; // Solo 5 productos por vez
+        
+        $elit_products = ELIT_API_Manager::get_products_batch($offset, $limit);
         
         if (empty($elit_products)) {
-            NB_Logger::warning('No se obtuvieron productos de ELIT API');
-            return 'No se encontraron productos en ELIT API. Verifica las credenciales y la conexión.';
+            // Si no hay más productos, reiniciar el offset
+            update_option('elit_sync_offset', 0);
+            NB_Logger::info('Sincronización por lotes completada. Reiniciando offset.');
+            return 'Sincronización por lotes completada.';
         }
-
-        NB_Logger::info('Obtenidos ' . count($elit_products) . ' productos de ELIT');
+        
+        // Actualizar offset para la próxima ejecución
+        update_option('elit_sync_offset', $offset + $limit);
+        
+        NB_Logger::info('Procesando lote ' . ($offset / $limit + 1) . ' - Productos: ' . count($elit_products));
 
         // Transformar productos de ELIT al formato WooCommerce
         $transformed_products = array();
@@ -90,11 +99,11 @@ function elit_callback($syncDescription = false) {
             'errors' => array()
         );
 
-        // Verificar tiempo transcurrido antes de sincronización (más estricto)
+        // Verificar tiempo transcurrido antes de sincronización (ultra estricto)
         $elapsed_time = microtime(true) - $start_time;
-        if ($elapsed_time > 60) { // 1 minuto
+        if ($elapsed_time > 30) { // 30 segundos
             NB_Logger::warning('Tiempo límite alcanzado antes de sincronización. Procesando solo productos obtenidos.');
-            $transformed_products = array_slice($transformed_products, 0, 25); // Limitar a 25 productos
+            $transformed_products = array_slice($transformed_products, 0, 10); // Limitar a 10 productos
         }
         
         // Sincronizar productos usando la clase existente de sincronización

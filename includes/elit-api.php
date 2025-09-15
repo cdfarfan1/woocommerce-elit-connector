@@ -36,7 +36,7 @@ class ELIT_API_Manager {
      * @var int
      * @since 1.0.0
      */
-    private static $max_limit = 25;
+    private static $max_limit = 10;
     
     /**
      * Get authentication credentials
@@ -516,6 +516,40 @@ class ELIT_API_Manager {
         return implode(' | ', $parts);
     }
     
+    /**
+     * Get products in small batches for processing
+     * 
+     * @param int $offset Starting offset
+     * @param int $limit Maximum products to fetch
+     * @return array Array of products or empty array
+     * @since 1.0.0
+     */
+    public static function get_products_batch($offset = 0, $limit = 10) {
+        $credentials = self::get_credentials();
+        
+        if (!$credentials) {
+            return array();
+        }
+        
+        $url = self::ELIT_API_URL . '?limit=' . $limit . '&offset=' . $offset;
+        
+        $response = self::make_request($url, $credentials);
+        
+        if (is_wp_error($response)) {
+            NB_Logger::error('Error en batch API ELIT: ' . $response->get_error_message());
+            return array();
+        }
+        
+        $data = json_decode($response['body'], true);
+        
+        if (!isset($data['resultado']) || !is_array($data['resultado'])) {
+            NB_Logger::warning('Respuesta de batch API ELIT no válida');
+            return array();
+        }
+        
+        return $data['resultado'];
+    }
+
     /**
      * Test ELIT API connection
      * 

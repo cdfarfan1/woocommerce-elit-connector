@@ -27,7 +27,7 @@ class NB_Product_Sync {
      * @var int
      * @since 1.0.0
      */
-    private static $batch_size = 10;
+    private static $batch_size = 5;
     
     /**
      * Maximum execution time in seconds (5 minutes)
@@ -35,7 +35,7 @@ class NB_Product_Sync {
      * @var int
      * @since 1.0.0
      */
-    private static $max_execution_time = 90;
+    private static $max_execution_time = 45;
     
     /**
      * Delete products by prefix with improved performance and safety
