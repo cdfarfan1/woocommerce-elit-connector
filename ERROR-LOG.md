@@ -52,6 +52,45 @@ echo " disabled>Actualizado: ' . VERSION_ELIT . '</button>';
 
 ---
 
+### Error #003 - Tiempo de ejecución excedido (max_execution_time)
+**Fecha**: 15 Septiembre 2025  
+**Error**: `max_execution_time 120` excedido durante sincronización
+
+#### 🔍 Descripción:
+El plugin está excediendo el límite de tiempo de ejecución de 120 segundos durante la sincronización de productos, probablemente debido a:
+- Muchos productos para sincronizar (1,149 disponibles)
+- Descarga de imágenes que toma tiempo
+- Procesamiento sin optimización de tiempo
+
+#### ✅ Solución Aplicada:
+1. **Reducir límites de tiempo**: 1800s → 300s (5 minutos máximo)
+2. **Reducir memoria**: 2GB → 512MB 
+3. **Reducir lote de productos**: 50 → 20 productos por lote
+4. **Reducir request API**: 100 → 50 productos por request
+5. **Agregar verificación de tiempo**: Limitar a 50 productos si pasa 3 minutos
+
+#### 🔧 Código Corregido:
+```php
+// ANTES (problemático)
+ini_set('max_execution_time', '1800'); // 30 minutos
+private static $batch_size = 50;
+private static $max_limit = 100;
+
+// DESPUÉS (optimizado)
+ini_set('max_execution_time', '300'); // 5 minutos
+private static $batch_size = 20;
+private static $max_limit = 50;
+
+// Verificación de tiempo agregada
+if ($elapsed_time > 180) {
+    $transformed_products = array_slice($transformed_products, 0, 50);
+}
+```
+
+#### 📅 Estado: **CORREGIDO** ✅
+
+---
+
 ### Error #002 - Función elit_smart_callback() no definida
 **Fecha**: 15 Septiembre 2025  
 **Archivo**: `includes/settings.php:174`  
