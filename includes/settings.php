@@ -168,6 +168,150 @@ function elit_options_page()
     echo '</tbody>';
     echo '</table>';
     
+    // Configuración de mapeo de campos
+    echo '<h2 style="margin-top: 30px; color: #0073aa;">🔗 Mapeo de Campos ELIT → WooCommerce</h2>';
+    echo '<p>Configura qué campos de ELIT se vinculan con los campos de WooCommerce:</p>';
+    
+    echo '<table class="form-table" style="background: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+    echo '<thead style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">';
+    echo '<tr>';
+    echo '<th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Campo WooCommerce</th>';
+    echo '<th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Campo ELIT</th>';
+    echo '<th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Actualizar</th>';
+    echo '<th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Descripción</th>';
+    echo '</tr>';
+    echo '</thead>';
+    echo '<tbody>';
+    
+    // Configuración de mapeo de campos
+    $field_mappings = array(
+        array('sku', 'codigo_producto', 'SKU del producto'),
+        array('name', 'nombre', 'Nombre del producto'),
+        array('price', 'pvp_ars', 'Precio en pesos argentinos'),
+        array('price_usd', 'pvp_usd', 'Precio en dólares'),
+        array('stock_quantity', 'stock_total', 'Cantidad de stock'),
+        array('stock_status', 'nivel_stock', 'Estado de stock'),
+        array('weight', 'peso', 'Peso del producto'),
+        array('ean', 'ean', 'Código de barras'),
+        array('warranty', 'garantia', 'Información de garantía'),
+        array('gamer', 'gamer', 'Producto gaming'),
+        array('category', 'categoria', 'Categoría principal'),
+        array('subcategory', 'sub_categoria', 'Subcategoría'),
+        array('brand', 'marca', 'Marca del producto'),
+        array('images', 'imagenes', 'Imágenes del producto'),
+        array('thumbnails', 'miniaturas', 'Miniaturas del producto'),
+        array('attributes', 'atributos', 'Atributos del producto'),
+        array('link', 'link', 'Enlace ELIT')
+    );
+    
+    foreach ($field_mappings as $mapping) {
+        $wc_field = $mapping[0];
+        $elit_field = $mapping[1];
+        $description = $mapping[2];
+        
+        $update_key = 'elit_update_' . $wc_field;
+        $field_key = 'elit_field_' . $wc_field;
+        
+        $update_enabled = get_option($update_key, true);
+        $field_value = get_option($field_key, $elit_field);
+        
+        echo '<tr>';
+        echo '<td style="padding: 10px; font-weight: bold; color: #0073aa;">' . esc_html(ucfirst(str_replace('_', ' ', $wc_field))) . '</td>';
+        echo '<td style="padding: 10px;">';
+        echo '<select name="' . esc_attr($field_key) . '" style="width: 200px;">';
+        
+        $elit_fields = array(
+            'id' => 'ID único',
+            'codigo_alfa' => 'Código alfanumérico',
+            'codigo_producto' => 'Código de producto',
+            'nombre' => 'Nombre',
+            'categoria' => 'Categoría',
+            'sub_categoria' => 'Subcategoría',
+            'marca' => 'Marca',
+            'precio' => 'Precio base',
+            'impuesto_interno' => 'Impuesto interno',
+            'iva' => 'IVA',
+            'moneda' => 'Moneda',
+            'markup' => 'Markup',
+            'cotizacion' => 'Cotización',
+            'pvp_usd' => 'PVP USD',
+            'pvp_ars' => 'PVP ARS',
+            'peso' => 'Peso',
+            'ean' => 'EAN',
+            'nivel_stock' => 'Nivel de stock',
+            'stock_total' => 'Stock total',
+            'stock_deposito_cliente' => 'Stock depósito cliente',
+            'stock_deposito_cd' => 'Stock depósito CD',
+            'garantia' => 'Garantía',
+            'link' => 'Enlace',
+            'imagenes' => 'Imágenes',
+            'miniaturas' => 'Miniaturas',
+            'atributos' => 'Atributos',
+            'gamer' => 'Gaming',
+            'creado' => 'Fecha creación',
+            'actualizado' => 'Fecha actualización'
+        );
+        
+        foreach ($elit_fields as $field => $label) {
+            $selected = ($field_value === $field) ? 'selected' : '';
+            echo '<option value="' . esc_attr($field) . '" ' . $selected . '>' . esc_html($label) . '</option>';
+        }
+        
+        echo '</select>';
+        echo '</td>';
+        echo '<td style="padding: 10px;">';
+        echo '<input type="checkbox" name="' . esc_attr($update_key) . '" value="1" ' . checked(1, $update_enabled, false) . ' />';
+        echo '</td>';
+        echo '<td style="padding: 10px; color: #6c757d; font-size: 12px;">' . esc_html($description) . '</td>';
+        echo '</tr>';
+    }
+    
+    echo '</tbody>';
+    echo '</table>';
+    
+    // Configuración de actualización automática
+    echo '<h2 style="margin-top: 30px; color: #0073aa;">🔄 Configuración de Actualización Automática</h2>';
+    echo '<table class="form-table" style="background: white; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+    echo '<tbody>';
+    
+    // Actualizar precios
+    echo '<tr>';
+    echo '<th scope="row">Actualizar Precios</th>';
+    echo '<td><input type="checkbox" name="elit_update_prices" id="elit_update_prices" value="1" ' . checked(1, get_option('elit_update_prices', true), false) . ' />';
+    echo '<p class="description">Actualiza automáticamente los precios de los productos existentes durante la sincronización.</p></td>';
+    echo '</tr>';
+    
+    // Actualizar stock
+    echo '<tr>';
+    echo '<th scope="row">Actualizar Stock</th>';
+    echo '<td><input type="checkbox" name="elit_update_stock" id="elit_update_stock" value="1" ' . checked(1, get_option('elit_update_stock', true), false) . ' />';
+    echo '<p class="description">Actualiza automáticamente las cantidades de stock de los productos existentes durante la sincronización.</p></td>';
+    echo '</tr>';
+    
+    // Actualizar imágenes
+    echo '<tr>';
+    echo '<th scope="row">Actualizar Imágenes</th>';
+    echo '<td><input type="checkbox" name="elit_update_images" id="elit_update_images" value="1" ' . checked(1, get_option('elit_update_images', false), false) . ' />';
+    echo '<p class="description">Actualiza las imágenes de los productos existentes (puede ser lento).</p></td>';
+    echo '</tr>';
+    
+    // Actualizar categorías
+    echo '<tr>';
+    echo '<th scope="row">Actualizar Categorías</th>';
+    echo '<td><input type="checkbox" name="elit_update_categories" id="elit_update_categories" value="1" ' . checked(1, get_option('elit_update_categories', true), false) . ' />';
+    echo '<p class="description">Actualiza las categorías y marcas de los productos existentes.</p></td>';
+    echo '</tr>';
+    
+    // Actualizar metadatos
+    echo '<tr>';
+    echo '<th scope="row">Actualizar Metadatos</th>';
+    echo '<td><input type="checkbox" name="elit_update_metadata" id="elit_update_metadata" value="1" ' . checked(1, get_option('elit_update_metadata', true), false) . ' />';
+    echo '<p class="description">Actualiza metadatos como EAN, garantía, gaming, etc.</p></td>';
+    echo '</tr>';
+    
+    echo '</tbody>';
+    echo '</table>';
+    
     // Mapeo de campos ELIT -> WooCommerce
     echo '<div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #0073aa;">';
     echo '<h3 style="margin-top: 0; color: #0073aa;">📋 Mapeo de Campos ELIT → WooCommerce</h3>';

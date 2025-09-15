@@ -327,9 +327,15 @@ class NB_Product_Sync {
             return false;
         }
         
+        // Always update name
         $product->set_name($data['name']);
-        $product->set_regular_price($data['price']);
         
+        // Update price only if enabled
+        if (get_option('elit_update_prices', true)) {
+            $product->set_regular_price($data['price']);
+        }
+        
+        // Update descriptions only if enabled
         if ($sync_descriptions && !empty($data['description'])) {
             $product->set_description($data['description']);
         }
@@ -338,32 +344,66 @@ class NB_Product_Sync {
             $product->set_short_description($data['short_description']);
         }
         
-        // Handle stock management with ELIT stock status
-        $stock_quantity = intval($data['stock_quantity'] ?? 0);
-        $stock_status = $data['stock_status'] ?? 'outofstock';
+        // Update stock only if enabled
+        if (get_option('elit_update_stock', true)) {
+            $stock_quantity = intval($data['stock_quantity'] ?? 0);
+            $stock_status = $data['stock_status'] ?? 'outofstock';
+            
+            $product->set_manage_stock(true);
+            $product->set_stock_quantity($stock_quantity);
+            $product->set_stock_status($stock_status);
+            
+            // Set backorders if stock is low but available
+            if ($stock_status === 'onbackorder') {
+                $product->set_backorders('yes');
+            } else {
+                $product->set_backorders('no');
+            }
+        }
         
-        $product->set_manage_stock(true);
-        $product->set_stock_quantity($stock_quantity);
-        $product->set_stock_status($stock_status);
-        
-        // Set backorders if stock is low but available
-        if ($stock_status === 'onbackorder') {
-            $product->set_backorders('yes');
-        } else {
-            $product->set_backorders('no');
+        // Update weight if configured
+        if (get_option('elit_update_' . 'weight', true) && !empty($data['weight'])) {
+            $product->set_weight($data['weight']);
         }
         
         $result = $product->save();
         
         if ($result) {
-            // Handle categories and images
-            self::set_product_categories($product_id, $data['categories']);
-            if (!empty($data['images'])) {
+            // Update categories only if enabled
+            if (get_option('elit_update_categories', true)) {
+                self::set_product_categories($product_id, $data['categories']);
+            }
+            
+            // Update images only if enabled
+            if (get_option('elit_update_images', false) && !empty($data['images'])) {
                 self::set_product_images($product_id, $data['images']);
+            }
+            
+            // Update metadata only if enabled
+            if (get_option('elit_update_metadata', true)) {
+                self::update_product_metadata($product_id, $data);
             }
         }
         
         return $result;
+    }
+    
+    /**
+     * Update product metadata from ELIT data
+     * 
+     * @since 1.0.0
+     * @param int   $product_id Product ID
+     * @param array $data       Product data
+     * @return void
+     */
+    private static function update_product_metadata($product_id, $data) {
+        if (empty($data['meta_data'])) {
+            return;
+        }
+        
+        foreach ($data['meta_data'] as $key => $value) {
+            update_post_meta($product_id, $key, $value);
+        }
     }
     
     /**

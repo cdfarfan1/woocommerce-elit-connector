@@ -30,6 +30,21 @@ function elit_register_settings()
     register_setting('elit_options', 'elit_markup_percentage');
     register_setting('elit_options', 'elit_apply_markup_on_pvp');
     
+    // Field mapping settings
+    $field_mappings = array('sku', 'name', 'price', 'price_usd', 'stock_quantity', 'stock_status', 'weight', 'ean', 'warranty', 'gamer', 'category', 'subcategory', 'brand', 'images', 'thumbnails', 'attributes', 'link');
+    
+    foreach ($field_mappings as $field) {
+        register_setting('elit_options', 'elit_field_' . $field);
+        register_setting('elit_options', 'elit_update_' . $field);
+    }
+    
+    // Update settings
+    register_setting('elit_options', 'elit_update_prices');
+    register_setting('elit_options', 'elit_update_stock');
+    register_setting('elit_options', 'elit_update_images');
+    register_setting('elit_options', 'elit_update_categories');
+    register_setting('elit_options', 'elit_update_metadata');
+    
     // Keep legacy settings for compatibility during transition
     register_setting('elit_options', 'nb_description');
     register_setting('elit_options', 'nb_sync_interval');

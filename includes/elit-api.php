@@ -215,23 +215,23 @@ class ELIT_API_Manager {
             return null;
         }
         
-        // Map ELIT fields to WooCommerce format using exact API fields
+        // Map ELIT fields to WooCommerce format using configurable field mappings
         $transformed = array(
-            // Core WooCommerce fields
-            'sku' => self::get_field_value($elit_product, array('codigo_producto')),
-            'name' => self::get_field_value($elit_product, array('nombre')),
+            // Core WooCommerce fields - using configurable mappings
+            'sku' => self::get_mapped_field($elit_product, 'sku'),
+            'name' => self::get_mapped_field($elit_product, 'name'),
             'short_description' => self::build_short_description($elit_product),
             'price' => self::get_elit_price($elit_product),
-            'stock_quantity' => self::get_elit_stock($elit_product),
+            'stock_quantity' => self::get_mapped_field($elit_product, 'stock_quantity'),
             'stock_status' => self::get_elit_stock_status($elit_product),
             'categories' => self::get_elit_categories($elit_product),
             'images' => self::get_elit_images($elit_product),
-            'weight' => self::get_field_value($elit_product, array('peso'), 0),
-            'brand' => self::get_field_value($elit_product, array('marca')),
-            'warranty' => self::get_field_value($elit_product, array('garantia')),
-            'ean' => self::get_field_value($elit_product, array('ean')),
-            'is_gamer' => self::get_field_value($elit_product, array('gamer'), false),
-            'attributes' => self::get_field_value($elit_product, array('atributos'), array()),
+            'weight' => self::get_mapped_field($elit_product, 'weight'),
+            'brand' => self::get_mapped_field($elit_product, 'brand'),
+            'warranty' => self::get_mapped_field($elit_product, 'warranty'),
+            'ean' => self::get_mapped_field($elit_product, 'ean'),
+            'is_gamer' => self::get_mapped_field($elit_product, 'gamer'),
+            'attributes' => self::get_mapped_field($elit_product, 'attributes'),
             
             // ELIT specific metadata - using exact API field names
             'meta_data' => array(
@@ -296,6 +296,41 @@ class ELIT_API_Manager {
             }
         }
         return $default;
+    }
+    
+    /**
+     * Get mapped field value using user configuration
+     * 
+     * @since 1.0.0
+     * @param array $elit_product ELIT product data
+     * @param string $wc_field    WooCommerce field name
+     * @return mixed              Mapped field value
+     */
+    private static function get_mapped_field($elit_product, $wc_field) {
+        $elit_field = get_option('elit_field_' . $wc_field, '');
+        
+        if (empty($elit_field)) {
+            // Use default mappings if not configured
+            $default_mappings = array(
+                'sku' => 'codigo_producto',
+                'name' => 'nombre',
+                'stock_quantity' => 'stock_total',
+                'weight' => 'peso',
+                'brand' => 'marca',
+                'warranty' => 'garantia',
+                'ean' => 'ean',
+                'gamer' => 'gamer',
+                'attributes' => 'atributos'
+            );
+            
+            $elit_field = isset($default_mappings[$wc_field]) ? $default_mappings[$wc_field] : '';
+        }
+        
+        if (empty($elit_field)) {
+            return '';
+        }
+        
+        return isset($elit_product[$elit_field]) ? $elit_product[$elit_field] : '';
     }
     
     /**
