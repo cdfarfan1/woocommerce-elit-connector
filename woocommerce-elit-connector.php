@@ -1,11 +1,24 @@
 <?php
-/*
-Plugin Name: Conector ELIT
-Description: Sincroniza los productos del catálogo de ELIT con WooCommerce.
-Author: ELIT Connector
-Author URI: https://elit.com.ar
-Version: 1.0.0
-*/
+/**
+ * Plugin Name: Conector ELIT para WooCommerce
+ * Plugin URI: https://github.com/cdfarfan1/woocommerce-elit-connector
+ * Description: Sincroniza automáticamente los productos del catálogo de ELIT con WooCommerce, incluyendo precios, imágenes y gestión de stock.
+ * Version: 1.0.0
+ * Author: Cristian Farfan, Pragmatic Solutions
+ * Author URI: https://www.pragmaticsolutions.com.ar
+ * License: GPL-2.0+
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain: woocommerce-elit-connector
+ * Domain Path: /languages
+ * Requires at least: 5.0
+ * Tested up to: 6.4
+ * Requires PHP: 7.4
+ * WC requires at least: 4.0
+ * WC tested up to: 8.0
+ * Network: false
+ * GitHub Plugin URI: https://github.com/cdfarfan1/woocommerce-elit-connector
+ * Support URI: https://github.com/cdfarfan1/woocommerce-elit-connector/issues
+ */
 
 // Prevent direct access
 if (!defined('ABSPATH')) {

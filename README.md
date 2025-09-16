@@ -2,6 +2,18 @@
 
 Plugin de WordPress que sincroniza automáticamente productos desde la API de ELIT a tu tienda WooCommerce.
 
+[![GitHub release](https://img.shields.io/github/release/cdfarfan1/woocommerce-elit-connector.svg)](https://github.com/cdfarfan1/woocommerce-elit-connector/releases)
+[![GitHub issues](https://img.shields.io/github/issues/cdfarfan1/woocommerce-elit-connector.svg)](https://github.com/cdfarfan1/woocommerce-elit-connector/issues)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
+[![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
+[![WooCommerce](https://img.shields.io/badge/WooCommerce-4.0%2B-purple.svg)](https://woocommerce.com/)
+
+## 🔗 Enlaces
+
+- **Repositorio GitHub:** https://github.com/cdfarfan1/woocommerce-elit-connector
+- **Sitio Web:** https://www.pragmaticsolutions.com.ar
+- **Soporte:** https://github.com/cdfarfan1/woocommerce-elit-connector/issues
+
 ## 🚀 Características
 
 - **Sincronización automática** de productos desde la API de ELIT
@@ -23,10 +35,77 @@ Plugin de WordPress que sincroniza automáticamente productos desde la API de EL
 
 ## 🔧 Instalación
 
-1. Descarga el plugin desde GitHub
+### Opción 1: Instalación desde GitHub
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/cdfarfan1/woocommerce-elit-connector.git
+
+# Navegar al directorio
+cd woocommerce-elit-connector
+
+# Copiar a la carpeta de plugins de WordPress
+cp -r . /ruta/a/tu/sitio/wp-content/plugins/woocommerce-elit-connector/
+```
+
+### Opción 2: Instalación manual
+
+1. Descarga el plugin desde [GitHub Releases](https://github.com/cristianfarfan/woocommerce-elit-connector/releases)
 2. Sube la carpeta `woocommerce-elit-connector` a `/wp-content/plugins/`
 3. Activa el plugin desde el panel de administración de WordPress
 4. Ve a **Ajustes > Conector ELIT** para configurar
+
+## 🔄 Control de Versiones
+
+### Repositorio GitHub
+
+**URL del Repositorio:** https://github.com/cdfarfan1/woocommerce-elit-connector  
+**Rama Principal:** `main`  
+**Última Versión:** 1.0.0  
+
+### Comandos de Control de Versiones
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/cdfarfan1/woocommerce-elit-connector.git
+
+# Crear nueva rama de desarrollo
+git checkout -b feature/nueva-funcionalidad
+
+# Agregar cambios
+git add .
+git commit -m "feat: Agregar nueva funcionalidad de sincronización"
+
+# Subir cambios
+git push origin feature/nueva-funcionalidad
+
+# Crear Pull Request en GitHub
+# Merge a main después de revisión
+```
+
+### Tags de Versión
+
+```bash
+# Crear tag para nueva versión
+git tag -a v1.0.0 -m "Release version 1.0.0 - Conector ELIT inicial"
+git push origin v1.0.0
+
+# Listar tags
+git tag -l
+
+# Verificar tag
+git show v1.0.0
+```
+
+### Estructura de Commits
+
+- `feat:` Nueva funcionalidad
+- `fix:` Corrección de bugs
+- `docs:` Documentación
+- `style:` Formato de código
+- `refactor:` Refactorización
+- `test:` Pruebas
+- `chore:` Tareas de mantenimiento
 
 ## ⚙️ Configuración
 
@@ -153,9 +232,23 @@ Los logs se guardan en:
 
 Este plugin está licenciado bajo la Licencia GPL v2 o posterior.
 
-## 📞 Soporte
+## 📞 Soporte y Contacto
 
-Para soporte técnico:
+**Desarrollador:** Cristian Farfan  
+**Empresa:** Pragmatic Solutions  
+**Email:** info@pragmaticsolutions.com.ar  
+**Sitio Web:** https://www.pragmaticsolutions.com.ar  
+**GitHub:** https://github.com/cristianfarfan  
+**LinkedIn:** https://linkedin.com/in/cristianfarfan  
+
+### Canales de Soporte
+
+1. **GitHub Issues:** https://github.com/cdfarfan1/woocommerce-elit-connector/issues
+2. **Email:** info@pragmaticsolutions.com.ar
+3. **Documentación:** Manuales y guías en el repositorio
+4. **Pull Requests:** Contribuciones bienvenidas
+
+### Para soporte técnico:
 - Revisa los logs del plugin
 - Verifica las credenciales de ELIT
 - Crea un issue en GitHub con detalles del problema
