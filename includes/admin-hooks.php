@@ -42,6 +42,8 @@ function elit_register_settings()
     register_setting('elit_options', 'elit_update_prices');
     register_setting('elit_options', 'elit_update_stock');
     register_setting('elit_options', 'elit_update_images');
+    register_setting('elit_options', 'elit_max_images');
+    register_setting('elit_options', 'elit_cleanup_duplicate_images');
     register_setting('elit_options', 'elit_update_categories');
     register_setting('elit_options', 'elit_update_metadata');
     

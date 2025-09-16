@@ -463,27 +463,116 @@ class NB_Product_Sync {
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         
         $gallery_ids = array();
+        $processed_count = 0;
+        $max_images = get_option('elit_max_images', 10); // Configurable limit
         
         foreach ($images as $index => $image_url) {
+            // Limit number of images to prevent timeout
+            if ($processed_count >= $max_images) {
+                break;
+            }
+            
             $image_url = esc_url_raw($image_url);
             
             if (empty($image_url)) {
                 continue;
             }
             
-            $attachment_id = media_sideload_image($image_url, $product_id, null, 'id');
+            // Check if image already exists to avoid duplicates
+            $existing_attachment = self::get_attachment_by_url($image_url);
+            if ($existing_attachment) {
+                $attachment_id = $existing_attachment;
+            } else {
+                // Add timeout for image download
+                $attachment_id = self::download_image_with_timeout($image_url, $product_id);
+            }
             
-            if (!is_wp_error($attachment_id)) {
+            if (!is_wp_error($attachment_id) && $attachment_id) {
                 if ($index === 0) {
                     set_post_thumbnail($product_id, $attachment_id);
                 } else {
                     $gallery_ids[] = $attachment_id;
+                }
+                $processed_count++;
+            } else {
+                // Log error but continue with other images
+                if (is_wp_error($attachment_id)) {
+                    NB_Logger::warning('Error descargando imagen: ' . $attachment_id->get_error_message());
                 }
             }
         }
         
         if (!empty($gallery_ids)) {
             update_post_meta($product_id, '_product_image_gallery', implode(',', $gallery_ids));
+        }
+        
+        NB_Logger::info("Imágenes procesadas para producto {$product_id}: {$processed_count}");
+        
+        // Clean up duplicate images if enabled
+        if (get_option('elit_cleanup_duplicate_images', false)) {
+            self::cleanup_duplicate_images($product_id);
+        }
+    }
+    
+    /**
+     * Check if image already exists in media library
+     * 
+     * @since 1.0.0
+     * @param string $image_url Image URL
+     * @return int|false Attachment ID if exists, false otherwise
+     */
+    private static function get_attachment_by_url($image_url) {
+        global $wpdb;
+        
+        $filename = basename(parse_url($image_url, PHP_URL_PATH));
+        $attachment = $wpdb->get_var($wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_title = %s",
+            $filename
+        ));
+        
+        return $attachment ? intval($attachment) : false;
+    }
+    
+    /**
+     * Download image with timeout protection
+     * 
+     * @since 1.0.0
+     * @param string $image_url  Image URL
+     * @param int    $product_id Product ID
+     * @return int|WP_Error     Attachment ID or error
+     */
+    private static function download_image_with_timeout($image_url, $product_id) {
+        // Set shorter timeout for image downloads
+        add_filter('http_request_timeout', function() { return 10; });
+        
+        $attachment_id = media_sideload_image($image_url, $product_id, null, 'id');
+        
+        // Reset timeout
+        remove_all_filters('http_request_timeout');
+        
+        return $attachment_id;
+    }
+    
+    /**
+     * Clean up duplicate images for a product
+     * 
+     * @since 1.0.0
+     * @param int $product_id Product ID
+     * @return void
+     */
+    private static function cleanup_duplicate_images($product_id) {
+        $gallery_ids = get_post_meta($product_id, '_product_image_gallery', true);
+        
+        if (empty($gallery_ids)) {
+            return;
+        }
+        
+        $gallery_array = explode(',', $gallery_ids);
+        $unique_gallery = array_unique($gallery_array);
+        
+        if (count($unique_gallery) !== count($gallery_array)) {
+            update_post_meta($product_id, '_product_image_gallery', implode(',', $unique_gallery));
+            NB_Logger::info("Imágenes duplicadas eliminadas para producto {$product_id}");
         }
     }
     

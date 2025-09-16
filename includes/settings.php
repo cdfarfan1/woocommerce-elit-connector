@@ -291,8 +291,22 @@ function elit_options_page()
     // Actualizar imágenes
     echo '<tr>';
     echo '<th scope="row">Actualizar Imágenes</th>';
-    echo '<td><input type="checkbox" name="elit_update_images" id="elit_update_images" value="1" ' . checked(1, get_option('elit_update_images', false), false) . ' />';
-    echo '<p class="description">Actualiza las imágenes de los productos existentes (puede ser lento).</p></td>';
+    echo '<td><input type="checkbox" name="elit_update_images" id="elit_update_images" value="1" ' . checked(1, get_option('elit_update_images', true), false) . ' />';
+    echo '<p class="description">Actualiza las imágenes de los productos existentes. Compatible con formato .webp.</p></td>';
+    echo '</tr>';
+    
+    // Máximo de imágenes por producto
+    echo '<tr>';
+    echo '<th scope="row">Máximo de Imágenes</th>';
+    echo '<td><input type="number" name="elit_max_images" id="elit_max_images" value="' . esc_attr(get_option('elit_max_images', 10)) . '" min="1" max="20" style="width: 80px;" />';
+    echo '<p class="description">Número máximo de imágenes a procesar por producto (1-20).</p></td>';
+    echo '</tr>';
+    
+    // Limpiar imágenes duplicadas
+    echo '<tr>';
+    echo '<th scope="row">Limpiar Imágenes Duplicadas</th>';
+    echo '<td><input type="checkbox" name="elit_cleanup_duplicate_images" id="elit_cleanup_duplicate_images" value="1" ' . checked(1, get_option('elit_cleanup_duplicate_images', false), false) . ' />';
+    echo '<p class="description">Elimina automáticamente imágenes duplicadas de la galería del producto.</p></td>';
     echo '</tr>';
     
     // Actualizar categorías
