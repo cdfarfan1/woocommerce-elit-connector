@@ -1,0 +1,45 @@
+/* 
+ * CSS for the ELIT Connector Admin Settings Page
+ */
+
+.elit-connector-wrap .card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.elit-connector-wrap h1 {
+    font-size: 2em;
+    font-weight: 600;
+}
+
+.elit-connector-wrap h2 {
+    font-size: 1.4em;
+    margin: 0 0 10px 0;
+    padding: 0 0 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.elit-connector-wrap .form-table th {
+    width: 200px;
+}
+
+.elit-connector-wrap .dashicons {
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+#elit-connection-result .spinner, 
+#preview_result .spinner {
+    float: none;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+#preview_result img {
+    border: 1px solid #ddd;
+    padding: 4px;
+    background: #fff;
+}

@@ -1,97 +1,85 @@
 # Conector ELIT para WooCommerce
 
-Plugin de WordPress que sincroniza automáticamente productos desde la API de ELIT a tu tienda WooCommerce.
+Sincroniza automáticamente los productos del catálogo de ELIT con WooCommerce, incluyendo precios, imágenes y gestión de stock.
 
-[![GitHub release](https://img.shields.io/github/release/cdfarfan1/woocommerce-elit-connector.svg)](https://github.com/cdfarfan1/woocommerce-elit-connector/releases)
-[![GitHub issues](https://img.shields.io/github/issues/cdfarfan1/woocommerce-elit-connector.svg)](https://github.com/cdfarfan1/woocommerce-elit-connector/issues)
-[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
-[![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
-[![WooCommerce](https://img.shields.io/badge/WooCommerce-4.0%2B-purple.svg)](https://woocommerce.com/)
+## Descripción
 
-## 🔗 Enlaces
+Este plugin conecta tu tienda de WooCommerce con el catálogo de productos de ELIT, un importante mayorista de tecnología en Argentina. La integración te permite:
 
-- **Repositorio GitHub:** https://github.com/cdfarfan1/woocommerce-elit-connector
-- **Sitio Web:** https://www.pragmaticsolutions.com.ar
-- **Soporte:** https://github.com/cdfarfan1/woocommerce-elit-connector/issues
+*   **Sincronizar el catálogo completo:** Importa todos los productos de ELIT a tu WooCommerce con un solo clic.
+*   **Actualizaciones automáticas:** Programa sincronizaciones periódicas (vía WP-Cron) para mantener precios y stock siempre al día.
+*   **Conversión de moneda:** Si los precios de ELIT están en USD, el plugin puede convertirlos a ARS utilizando la cotización del dólar blue (requiere un plugin adicional).
+*   **Márgenes de ganancia:** Añade un margen de ganancia porcentual sobre el costo del producto.
+*   **Gestión de SKU:** Añade un prefijo personalizable a los SKUs para identificar fácilmente los productos de ELIT.
 
-## 🚀 Características
+## Instalación
 
-- **Sincronización automática** de productos desde la API de ELIT
-- **Gestión de precios** con markup personalizable
-- **Soporte para múltiples monedas** (ARS/USD)
-- **Sincronización de imágenes** automática desde ELIT
-- **Categorización inteligente** basada en datos de ELIT
-- **Gestión de stock** en tiempo real
-- **Programación de sincronización** (cada 1-12 horas)
-- **Interfaz de administración** intuitiva
-- **Vista previa de productos:** Permite previsualizar cómo se importará un producto de ELIT antes de la sincronización.
+1.  **Descarga el plugin:** Obtén el archivo `.zip` desde la sección de [Releases en GitHub](https://github.com/cdfarfan1/woocommerce-elit-connector/releases).
+2.  **Sube el plugin a WordPress:**
+    *   En tu panel de WordPress, ve a `Plugins > Añadir nuevo`.
+    *   Haz clic en `Subir Plugin` y selecciona el archivo `.zip` que descargaste.
+    *   Activa el plugin después de la instalación.
+3.  **Configura las credenciales:**
+    *   Ve a `Ajustes > Conector ELIT`.
+    *   Introduce tu `User ID` y `Token` de la API de ELIT.
+    *   Guarda los cambios.
 
-## 📋 Requisitos
+## Funcionalidades Principales
 
-- WordPress 5.0 o superior
-- WooCommerce 4.0 o superior
-- PHP 7.4 o superior
-- Credenciales de acceso a la API de ELIT (User ID y Token)
-- Plugin FIFU (Featured Image From URL) para manejo de imágenes
+### Configuración de la API
 
-## 🔧 Instalación
+Para que el plugin funcione, es fundamental que introduzcas las credenciales de la API que te proporciona ELIT.
 
-Puedes instalar este plugin de dos maneras:
+1.  **Ve a `Ajustes > Conector ELIT`.**
+2.  **Introduce tu `User ID` y `Token`.**
+3.  **Haz clic en "Probar Conexión"** para verificar que las credenciales son correctas. Deberías recibir un mensaje de "Conexión exitosa".
+4.  **Guarda los cambios.**
 
-### Opción 1: Instalación desde un archivo ZIP
+### Sincronización de Productos
 
-1.  **Descarga el plugin** desde el repositorio de GitHub haciendo clic en `Code > Download ZIP`.
-2.  **Ve a tu panel de WordPress.**
-3.  **Navega a `Plugins > Añadir nuevo`.**
-4.  **Haz clic en "Subir plugin"** y selecciona el archivo ZIP que descargaste.
-5.  **Instala y activa el plugin.**
+El plugin ofrece dos formas de sincronizar productos:
 
-### Opción 2: Instalación manual (vía FTP/SFTP)
+#### 1. Sincronización Manual
 
-1.  **Descarga y descomprime** el repositorio del plugin.
-2.  **Sube la carpeta** `woocommerce-elit-connector` completa a tu directorio de plugins en WordPress:
-    ```
-    /wp-content/plugins/
-    ```
-3.  **Ve a tu panel de WordPress**, navega a `Plugins > Plugins instalados`.
-4.  **Busca "Conector ELIT" y haz clic en "Activar".**
+Ideal para la primera vez o para forzar una actualización inmediata.
 
-### Dependencia Adicional
+1.  **Ve a `Ajustes > Conector ELIT`.**
+2.  **Haz clic en el botón "Sincronizar Productos Ahora".**
 
-**Importante:** Después de activar el conector, asegúrate de instalar y activar el plugin **FIFU (Featured Image From URL)**. Es un requisito para que las imágenes de los productos se muestren correctamente.
+El proceso puede tardar varios minutos dependiendo de la cantidad de productos en el catálogo de ELIT. La sincronización se realiza en segundo plano, por lo que puedes salir de la página mientras se ejecuta.
 
-## ⚙️ Optimización para Hosting Compartido
+#### 2. Sincronización Automática (Cron)
 
-Se han tenido en cuenta las limitaciones de los hostings compartidos (`memory_limit: 512M`, `max_execution_time: 300s`) para garantizar un funcionamiento estable.
+El plugin configura una tarea programada (WP-Cron) que ejecuta la sincronización automáticamente dos veces al día. Esto asegura que tu stock y precios se mantengan actualizados sin intervención manual.
 
--   **Procesamiento por Lotes:** La sincronización se procesa en lotes pequeños (20 productos por defecto) para evitar exceder el tiempo máximo de ejecución.
--   **Uso de Memoria Optimizado:** El plugin está diseñado para un consumo de memoria reducido, liberando recursos después de procesar cada lote para prevenir errores de memoria agotada.
--   **Consultas a la API Controladas:** Las solicitudes a la API de ELIT se gestionan en grupos más pequeños (50 productos por petición) para asegurar la estabilidad del servidor.
--   **Ajustes Flexibles:** Los valores de lotes y límites se han ajustado en el código para alinearse con estas limitaciones, basándonos en las optimizaciones previas registradas en `ERROR-LOG.md`.
+*   **Activación:** El cron se activa automáticamente cuando el plugin es activado.
+*   **Desactivación:** El cron se desactiva y elimina cuando el plugin es desactivado para no dejar tareas basura en tu sistema.
 
-## 🔧 Compatibilidad con WooCommerce (HPOS)
+### Opciones de Sincronización
 
-Entendemos que la compatibilidad con las nuevas características de WooCommerce, como el **Almacenamiento de Pedidos de Alto Rendimiento (HPOS)**, es crucial.
+Desde la página de ajustes, puedes personalizar cómo se importan y actualizan los productos:
 
-El **Conector ELIT** ha sido desarrollado siguiendo las prácticas recomendadas por WooCommerce para asegurar su compatibilidad con HPOS. El plugin se centra en la gestión de **productos**, utilizando funciones que son compatibles con la nueva arquitectura.
+*   **Prefijo para SKU:** Añade un identificador único a los productos de ELIT (ej: `ELIT-12345`).
+*   **Ajuste de Precios (USD a ARS):** Si tienes el plugin "Dolar Blue para WooCommerce" (o similar que actualice la cotización), esta opción convierte los precios de ELIT de USD a ARS.
+*   **Margen de Ganancia:** Define un porcentaje (%) de ganancia que se añadirá sobre el precio de costo de ELIT.
+*   **Opciones de Actualización:** Elige qué campos quieres que se actualicen en productos ya existentes (precio, stock, imágenes, categorías).
 
-Si ves una advertencia sobre "plugins incompatibles" en tu panel de WordPress, es probable que se deba a otro plugin que aún no ha sido actualizado.
+### Vista Previa de Producto
 
-### ¿Cómo verificar la compatibilidad de tus plugins?
+¿Quieres saber cómo se vería un producto de ELIT en tu tienda sin tener que importarlo? Usa la herramienta de vista previa:
 
-Puedes ver qué plugins no son compatibles con HPOS desde los ajustes de WooCommerce:
+1.  **Ve a `Ajustes > Conector ELIT`.**
+2.  **Busca la sección "Vista Previa de Producto".**
+3.  **Introduce el SKU de un producto de ELIT** (el código de producto, sin prefijos).
+4.  **Haz clic en "Generar Vista Previa".**
 
-1.  Ve a **WooCommerce > Ajustes > Avanzado > Características**.
-2.  Busca la opción **Almacenamiento de pedidos de alto rendimiento**.
-3.  Aquí verás una lista de los plugins que son compatibles y los que no.
+El sistema te mostrará los datos del producto tal como se importarían en WooCommerce.
 
-Esto te ayudará a identificar exactamente qué plugin está causando la advertencia.
-
-## 🔧 Personalización del Prefijo de SKU
+## Gestión de SKU
 
 Para asegurar que puedas distinguir fácilmente los productos importados desde ELIT, el conector añade automáticamente un prefijo a cada SKU.
 
-- **Prefijo por defecto:** `ELIT_`
+- **Prefijo por defecto:** `ELIT-`
 
 Por ejemplo, si un producto en ELIT tiene el SKU `12345`, en WooCommerce se guardará como `ELIT_12345`.
 
@@ -99,38 +87,30 @@ Por ejemplo, si un producto en ELIT tiene el SKU `12345`, en WooCommerce se guar
 
 Puedes personalizar este prefijo desde el panel de administración de WordPress:
 
-1.  **Ve a `Ajustes > Conector NB`.**
+1.  **Ve a `Ajustes > Conector ELIT`.**
 2.  **Busca el campo "Prefijo SKU".**
-3.  **Introduce el prefijo que desees (por ejemplo, `MIPREFIJO_`) y guarda los cambios.**
+3.  **Introduce el prefijo que desees (por ejemplo, `MIPREFIJO-`) y guarda los cambios.**
 
-##  Troubleshooting
+## Troubleshooting
 
 ### La prueba de conexión se demora o falla
 
 Si al hacer clic en **"Probar Conexión"** el proceso tarda demasiado y no responde, es probable que se deba a que el método de prueba anterior intentaba descargar una gran cantidad de datos, lo cual no es eficiente en un hosting compartido.
 
-**Solución:** Se ha implementado una prueba de conexión optimizada. En lugar de descargar datos, ahora se realiza una consulta rápida y ligera que solo verifica el estado de la conexión y la validez de las credenciales. Esta mejora ya está incluida en la última versión del plugin.
+**Solución:** Este conector utiliza un método de prueba ligero que solo valida las credenciales, por lo que este problema no debería ocurrir. Si aun así falla, verifica que:
 
-Si el problema persiste:
+*   Tu `User ID` y `Token` son correctos.
+*   Tu servidor no tiene un firewall que esté bloqueando las conexiones salientes a la API de ELIT.
 
-1.  **Verifica las credenciales:** Asegúrate de que el `User ID` y el `Token` son correctos.
-2.  **Consulta a tu proveedor de hosting:** Pregúntales si existe alguna restricción de firewall que pueda estar bloqueando las conexiones salientes hacia `clientes.elit.com.ar`.
+### Las imágenes de los productos no aparecen
 
-### Las imágenes no se muestran (aún con FIFU instalado)
+Si los productos se sincronizan pero no se muestran sus imágenes, puede deberse a varias razones. Este plugin utiliza el plugin **"Featured Image from URL (FIFU)"** como dependencia implícita para manejar las imágenes externas.
 
-Si ya instalaste y activaste el plugin **FIFU (Featured Image From URL)** pero las imágenes siguen sin aparecer, sigue estos pasos:
+**Paso 1: Asegúrate de que FIFU esté instalado y activo**
 
-**Paso 1: Revisa la configuración de FIFU**
+Aunque el conector puede funcionar sin él, la forma más robusta de manejar las imágenes es con FIFU. Búscalo en el repositorio de WordPress e instálalo.
 
-1.  En tu panel de WordPress, ve a **FIFU > Ajustes**.
-2.  Asegúrate de que la opción **"Hide Featured Media"** (Ocultar medio destacado) esté **desactivada**.
-3.  Ve a la pestaña **WooCommerce** dentro de los ajustes de FIFU.
-4.  Verifica que las opciones **"Disable Featured Image"** (Desactivar imagen destacada) y **"Disable Product Gallery"** (Desactivar galería de productos) estén **desactivadas**.
-5.  Guarda los cambios y refresca la página de un producto para ver si las imágenes aparecen.
-
-**Paso 2: Verifica la URL de la imagen en un producto**
-
-Vamos a confirmar que la URL de la imagen se está guardando correctamente.
+**Paso 2: Verifica la URL de la imagen en los campos personalizados**
 
 1.  Edita un producto que debería tener una imagen de ELIT.
 2.  Baja hasta encontrar una sección llamada **"Campos Personalizados"** (Custom Fields). Si no la ves, ve a la parte superior de la página, haz clic en **"Opciones de pantalla"** y asegúrate de que la casilla **"Campos Personalizados"** esté marcada.
@@ -142,16 +122,4 @@ Vamos a confirmar que la URL de la imagen se está guardando correctamente.
 
 **Paso 3: Vuelve a sincronizar un producto**
 
-Si has hecho cambios en la configuración, es una buena idea forzar la resincronización de un producto.
-
-1.  Ve a **Ajustes > Conector NB**.
-2.  Usa la herramienta **"Vista Previa de Producto"** con el SKU del producto que estás revisando para confirmar que la API devuelve una URL de imagen válida.
-3.  Luego, en la misma página, haz clic en el botón **"Actualizar todo"** para forzar una nueva sincronización. Esto debería aplicar los nuevos ajustes.
-
-**Paso 4: Prueba de conflicto de tema/plugins**
-
-Si nada de lo anterior funciona, es posible que otro plugin o tu tema estén causando un conflicto.
-
-1.  **Cambia temporalmente a un tema por defecto** de WordPress, como "Storefront" o "Twenty Twenty-Three".
-2.  Revisa si las imágenes aparecen. Si lo hacen, el problema está en tu tema.
-3.  Si no aparecen, desactiva todos los demás plugins excepto **WooCommerce**, **Conector ELIT** y **FIFU**. Si las imágenes aparecen ahora, ve activando los demás plugins uno por uno hasta que encuentres al culpable.
+Si instalaste FIFU o solucionaste un problema de URL, intenta sincronizar de nuevo un producto específico o ejecuta la sincronización general para que los cambios se apliquen.

@@ -1,178 +1,118 @@
 <?php
 /**
- * NewBytes WooCommerce Connector - Settings Functions
- *
- * @package NewBytes_WooCommerce_Connector
- * @version 1.1.1
+ * settings.php
+ * ---
+ * Renderiza el HTML de la página de ajustes del Conector ELIT.
  */
 
 if (!defined('ABSPATH')) {
-    exit('Direct access denied.');
+    exit; // No permitir acceso directo.
 }
-
-// ... (la función elit_options_page() y el resto de la parte superior del archivo permanece igual)
-
-function elit_options_page()
-{
-    // ... (código existente de la página de opciones)
-
-    // Vista Previa de Producto
-    echo '<div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8;">';
-    echo '<h3 style="margin-top: 0; color: #17a2b8;">🔍 Vista Previa de Producto</h3>';
-    echo '<p style="margin-bottom: 15px; color: #666;">Introduce el SKU de un producto de ELIT para ver cómo se importaría en WooCommerce sin sincronizarlo.</p>';
-    echo '<table class="form-table">';
-    echo '<tr>';
-    echo '<th scope="row"><label for="preview_sku">SKU del Producto</label></th>';
-    echo '<td><input type="text" id="preview_sku" name="preview_sku" placeholder="Ej: LENEX5WS0T36151" style="width: 250px;"/>';
-    echo '<p class="description">Usa el código de producto de ELIT (sin el prefijo).</p></td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"></th>';
-    echo '<td><button type="button" id="generate-preview-btn" class="button button-info">Generar Vista Previa</button></td>';
-    echo '</tr>';
-    echo '</table>';
-    echo '<div id="product-preview-result" style="margin-top: 20px; display: none;"></div>';
-    echo '</div>';
-
-    // ... (resto del HTML de la página)
-    
-    // Añadir el JavaScript para la vista previa al final de la función
-    ?>
-    <script type="text/javascript">
-    jQuery(document).ready(function($) {
-        $('#generate-preview-btn').on('click', function() {
-            var $btn = $(this);
-            var sku = $('#preview_sku').val();
-            var $resultDiv = $('#product-preview-result');
-
-            if (!sku) {
-                alert('Por favor, introduce un SKU.');
-                return;
-            }
-
-            $btn.prop('disabled', true).text('Generando...');
-            $resultDiv.hide().html('');
-
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'nb_product_preview',
-                    sku: sku,
-                    nonce: '<?php echo wp_create_nonce('nb_admin_nonce'); ?>'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        $resultDiv.html(response.data).show();
-                    } else {
-                        $resultDiv.html('<div class="notice notice-error"><p>' + response.data + '</p></div>').show();
-                    }
-                },
-                error: function() {
-                    $resultDiv.html('<div class="notice notice-error"><p>Ocurrió un error al generar la vista previa. Revisa la consola para más detalles.</p></div>').show();
-                },
-                complete: function() {
-                    $btn.prop('disabled', false).text('Generar Vista Previa');
-                }
-            });
-        });
-    });
-    </script>
-    <?php
-
-    // ... (código JavaScript existente para prueba de conexión, etc.)
-}
-
-add_action('wp_ajax_nb_product_preview', 'nb_product_preview_ajax');
 
 /**
- * Maneja la generación de la vista previa de un producto vía AJAX
- *
- * @since 1.1.1
- * @return void
+ * Función principal que se llama para dibujar toda la página de ajustes.
  */
-function nb_product_preview_ajax() {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'nb_admin_nonce')) {
-        wp_send_json_error('Error de seguridad.', 403);
-        return;
-    }
+function elit_render_settings_page() {
+    ?>
+    <div class="wrap elit-connector-wrap">
+        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+        <p>Configura la conexión con la API de ELIT y personaliza la sincronización de productos.</p>
 
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('No tienes permisos para esta acción.', 403);
-        return;
-    }
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('elit_options_group');
+            ?>
 
-    $sku = sanitize_text_field($_POST['sku']);
-    if (empty($sku)) {
-        wp_send_json_error('El SKU es obligatorio.');
-        return;
-    }
+            <!-- Sección de Credenciales de API -->
+            <div class="card">
+                <h2><span class="dashicons dashicons-admin-network"></span> Credenciales de la API</h2>
+                <p>Introduce tus credenciales para conectar con la API de ELIT.</p>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row"><label for="elit_user_id">User ID de ELIT</label></th>
+                        <td><input type="text" id="elit_user_id" name="elit_user_id" value="<?php echo esc_attr(get_option('elit_user_id')); ?>" class="regular-text" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row"><label for="elit_token">Token de ELIT</label></th>
+                        <td><input type="text" id="elit_token" name="elit_token" value="<?php echo esc_attr(get_option('elit_token')); ?>" class="regular-text"/></td>
+                    </tr>
+                </table>
+                <button type="button" id="test-elit-connection" class="button button-secondary">Probar Conexión</button>
+                <div id="elit-connection-result" style="margin-top: 10px; font-weight: bold;"></div>
+            </div>
 
-    // Obtener credenciales
-    $user_id = get_option('elit_user_id');
-    $token = get_option('elit_token');
+            <!-- Sección de Opciones de Sincronización -->
+            <div class="card">
+                <h2><span class="dashicons dashicons-admin-settings"></span> Opciones de Sincronización</h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="elit_sku_prefix">Prefijo para SKU</label></th>
+                        <td><input type="text" id="elit_sku_prefix" name="elit_sku_prefix" value="<?php echo esc_attr(get_option('elit_sku_prefix', 'ELIT-')); ?>" />
+                        <p class="description">Este prefijo se añadirá a cada SKU de producto importado.</p></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="nb_markup_percentage">Margen de Ganancia (%)</label></th>
+                        <td><input type="number" id="nb_markup_percentage" name="nb_markup_percentage" value="<?php echo esc_attr(get_option('nb_markup_percentage', '0')); ?>" class="small-text" min="0" step="any" />
+                        <p class="description">Añade un porcentaje de ganancia sobre el precio de ELIT.</p></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Moneda de Sincronización</th>
+                        <td>
+                            <fieldset>
+                                <label><input type="checkbox" name="elit_sync_usd" value="1" <?php checked(get_option('elit_sync_usd'), 1); ?> /> Sincronizar precios en USD</label>
+                                <p class="description">Si se marca, se usarán los precios en dólares (pvp_usd). Si no, se usarán pesos (pvp_ars).</p>
+                            </fieldset>
+                        </td>
+                    </tr>
+                </table>
+            </div>
 
-    if (empty($user_id) || empty($token)) {
-        wp_send_json_error('Las credenciales de ELIT no están configuradas.');
-        return;
-    }
+            <!-- Sección de Ajustes de Actualización -->
+             <div class="card">
+                <h2><span class="dashicons dashicons-update-alt"></span> Opciones de Actualización</h2>
+                 <p>Marca los campos que quieres actualizar cuando un producto ya existente se sincroniza.</p>
+                 <table class="form-table">
+                    <tr>
+                        <th scope="row">Actualizar Datos</th>
+                        <td>
+                            <fieldset>
+                                <label><input type="checkbox" name="elit_update_prices" value="1" <?php checked(get_option('elit_update_prices', 1), 1); ?> /> Actualizar Precios</label><br>
+                                <label><input type="checkbox" name="elit_update_stock" value="1" <?php checked(get_option('elit_update_stock', 1), 1); ?> /> Actualizar Stock</label><br>
+                                <label><input type="checkbox" name="elit_update_images" value="1" <?php checked(get_option('elit_update_images', 1), 1); ?> /> Actualizar Imágenes</label><br>
+                                <label><input type="checkbox" name="elit_update_categories" value="1" <?php checked(get_option('elit_update_categories', 1), 1); ?> /> Actualizar Categorías</label>
+                            </fieldset>
+                        </td>
+                    </tr>
+                </table>
+            </div>
 
-    // Endpoint de la API para un producto específico por 'codigo_producto'
-    $api_url = 'https://clientes.elit.com.ar/v1/api/productos';
-    $url = add_query_arg(array(
-        'user_id' => $user_id,
-        'token'   => $token,
-        'codigo_producto' => $sku, // Usar 'codigo_producto' para buscar por SKU
-    ), $api_url);
+            <?php submit_button('Guardar Cambios'); ?>
+        </form>
 
-    $response = wp_remote_get($url, array('timeout' => 30));
+        <!-- Sección de Sincronización Manual -->
+        <div class="card">
+             <h2><span class="dashicons dashicons-controls-repeat"></span> Sincronización Manual</h2>
+            <p>Ejecuta la sincronización de productos de forma manual.</p>
+            <button type="button" id="elit-full-sync" class="button button-primary">Actualizar Todo</button>
+            <button type="button" id="elit-desc-sync" class="button button-secondary">Actualizar Descripciones</button>
+            <div id="elit-sync-results" style="margin-top: 15px;"></div>
+        </div>
 
-    if (is_wp_error($response)) {
-        wp_send_json_error('Error de conexión: ' . $response->get_error_message());
-        return;
-    }
+        <!-- Sección de Vista Previa de Producto -->
+        <div class="card">
+            <hr>
+            <h2><span class="dashicons dashicons-search"></span> Vista Previa de Producto</h2>
+            <p>Introduce el SKU de un producto de ELIT (sin el prefijo) para ver cómo se importaría en WooCommerce.</p>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="preview_sku">SKU del Producto</label></th>
+                    <td><input type="text" id="preview_sku" class="regular-text" placeholder="Ej: LENEX5WS0T36151" /></td>
+                </tr>
+            </table>
+            <button type="button" id="generate_preview" class="button button-secondary">Generar Vista Previa</button>
+            <div id="preview_result" style="margin-top: 15px;"></div>
+        </div>
 
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-
-    if (empty($data['resultado']) || !is_array($data['resultado'])) {
-         wp_send_json_error('Producto no encontrado o error en la respuesta de la API. Verifica que el SKU sea correcto.');
-        return;
-    }
-
-    // Como la API devuelve un array, tomamos el primer elemento
-    $elit_product = $data['resultado'][0];
-
-    // Transformar los datos del producto
-    if (!class_exists('ELIT_API_Manager')) {
-        require_once ELIT_PLUGIN_PATH . 'includes/elit-api.php';
-    }
-    $transformed_product = ELIT_API_Manager::transform_product_data($elit_product);
-
-    if (!$transformed_product) {
-        wp_send_json_error('No se pudieron procesar los datos del producto.');
-        return;
-    }
-
-    // Generar HTML para la vista previa
-    $html = '<div class="product-preview-table-container">';
-    $html .= '<h4>Resultado de la Vista Previa</h4>';
-    $html .= '<table class="widefat striped">';
-    $html .= '<thead><tr><th>Campo</th><th>Valor</th></tr></thead>';
-    $html .= '<tbody>';
-    $html .= '<tr><td><strong>Nombre</strong></td><td>' . esc_html($transformed_product['name']) . '</td></tr>';
-    $html .= '<tr><td><strong>SKU Final</strong></td><td>' . esc_html($transformed_product['sku']) . '</td></tr>';
-    $html .= '<tr><td><strong>Precio Calculado</strong></td><td>$' . number_format($transformed_product['price'], 2, ',', '.') . ' (' . (get_option('elit_sync_usd') ? 'USD' : 'ARS') . ')</td></tr>';
-    $html .= '<tr><td><strong>Stock</strong></td><td>' . esc_html($transformed_product['stock_quantity']) . ' unidades (' . $transformed_product['stock_status'] . ')</td></tr>';
-    $html .= '<tr><td><strong>Categorías</strong></td><td>' . implode(', ', array_map('esc_html', $transformed_product['categories'])) . '</td></tr>';
-    $html .= '<tr><td><strong>Marca</strong></td><td>' . esc_html($transformed_product['brand']) . '</td></tr>';
-    $html .= '<tr><td><strong>Imagen Principal</strong></td><td><a href="' . esc_url($transformed_product['images'][0]) . '" target="_blank"><img src="' . esc_url($transformed_product['images'][0]) . '" style="max-width: 80px; height: auto;"/></a></td></tr>';
-    $html .= '<tr><td><strong>Descripción Corta</strong></td><td>' . esc_html($transformed_product['short_description']) . '</td></tr>';
-    $html .= '</tbody>';
-    $html .= '</table>';
-    $html .= '</div>';
-
-    wp_send_json_success($html);
+    </div>
+    <?php
 }
-
-// ... (el resto de las funciones de settings.php)

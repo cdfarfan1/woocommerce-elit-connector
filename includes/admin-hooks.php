@@ -1,54 +1,92 @@
 <?php
+/**
+ * admin-hooks.php
+ * --- 
+ * Registra los hooks necesarios para el área de administración.
+ * Esto incluye la página de ajustes, los scripts y los estilos.
+ */
 
 if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly
+    exit; // No permitir acceso directo.
 }
 
-function elit_plugin_action_links($links)
-{
-    $settings = '<a href="' . get_admin_url(null, 'options-general.php?page=elit') . '">Ajustes</a>';
-    array_unshift($links, $settings);
-    return $links;
+/**
+ * Añade la página de opciones al menú de "Ajustes" de WordPress.
+ */
+function elit_add_options_page() {
+    add_options_page(
+        'Conector ELIT',                 // Título de la página
+        'Conector ELIT',                 // Título del menú
+        'manage_options',                // Capacidad requerida
+        'elit-connector-settings',       // Slug del menú
+        'elit_render_settings_page'      // Función que renderiza la página (de settings.php)
+    );
 }
+add_action('admin_menu', 'elit_add_options_page');
 
-function elit_menu()
-{
-    add_options_page('Conector ELIT', 'Conector ELIT', 'manage_options', 'elit', 'elit_options_page');
-}
+/**
+ * Registra los ajustes del plugin para que WordPress los guarde.
+ */
+function elit_register_settings() {
+    // Grupo de opciones para el formulario
+    $option_group = 'elit_options_group';
 
-function elit_register_settings()
-{
-    // ELIT API settings
-    register_setting('elit_options', 'elit_user_id');
-    register_setting('elit_options', 'elit_token');
-    register_setting('elit_options', 'elit_sku_prefix');
-    register_setting('elit_options', 'elit_sync_usd');
-    
-    // General settings
-    register_setting('elit_options', 'elit_description');
-    register_setting('elit_options', 'elit_sync_interval');
-    register_setting('elit_options', 'elit_markup_percentage');
-    register_setting('elit_options', 'elit_apply_markup_on_pvp');
-    
-    // Field mapping settings
-    $field_mappings = array('sku', 'name', 'price', 'price_usd', 'stock_quantity', 'stock_status', 'weight', 'ean', 'warranty', 'gamer', 'category', 'subcategory', 'brand', 'images', 'thumbnails', 'attributes', 'link');
-    
-    foreach ($field_mappings as $field) {
-        register_setting('elit_options', 'elit_field_' . $field);
-        register_setting('elit_options', 'elit_update_' . $field);
+    // Lista de todas las opciones que guardaremos
+    $settings = [
+        'elit_user_id',
+        'elit_token',
+        'elit_sku_prefix',
+        'elit_sync_usd',
+        'nb_markup_percentage', // Nombre antiguo, se mantiene por compatibilidad
+        'elit_update_prices',
+        'elit_update_stock',
+        'elit_update_images',
+        'elit_update_categories'
+    ];
+
+    // Registrar cada opción
+    foreach ($settings as $setting_name) {
+        register_setting($option_group, $setting_name);
     }
-    
-    // Update settings
-    register_setting('elit_options', 'elit_update_prices');
-    register_setting('elit_options', 'elit_update_stock');
-    register_setting('elit_options', 'elit_update_images');
-    register_setting('elit_options', 'elit_max_images');
-    register_setting('elit_options', 'elit_cleanup_duplicate_images');
-    register_setting('elit_options', 'elit_update_categories');
-    register_setting('elit_options', 'elit_update_metadata');
-    
-    // Keep legacy settings for compatibility during transition
-    register_setting('elit_options', 'nb_description');
-    register_setting('elit_options', 'nb_sync_interval');
-    register_setting('elit_options', 'nb_markup_percentage');
 }
+add_action('admin_init', 'elit_register_settings');
+
+/**
+ * Encola los archivos CSS y JS en la página de ajustes del plugin.
+ */
+function elit_admin_enqueue_assets($hook) {
+    // Salir si no estamos en nuestra página de ajustes para no cargar assets innecesariamente.
+    if ($hook !== 'settings_page_elit-connector-settings') {
+        return;
+    }
+
+    // URL base de la carpeta del plugin
+    $plugin_url = plugin_dir_url(__FILE__); // Apunta a la carpeta 'includes'
+
+    // Corregir la URL para que apunte a la raíz del plugin
+    $plugin_root_url = str_replace('includes/', '', $plugin_url);
+
+    // Encolar la hoja de estilos principal
+    wp_enqueue_style(
+        'elit-admin-style',
+        $plugin_root_url . 'assets/css/admin-style.css',
+        [], // Sin dependencias
+        '2.0.0' // Versión del archivo
+    );
+
+    // Encolar el script de JavaScript para la interactividad (AJAX)
+    wp_enqueue_script(
+        'elit-admin-script',
+        $plugin_root_url . 'assets/js/admin.js',
+        ['jquery'], // Depende de jQuery
+        '2.0.0', // Versión del archivo
+        true // Cargar en el footer
+    );
+
+    // Pasar datos de PHP a JavaScript de forma segura (para AJAX)
+    wp_localize_script('elit-admin-script', 'elit_ajax_object', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('elit_ajax_nonce')
+    ]);
+}
+add_action('admin_enqueue_scripts', 'elit_admin_enqueue_assets');
